@@ -1,0 +1,6 @@
+{
+  "name": "Simzy Cash Saver",
+  "description": "Your Personal Digital Cash Book",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
