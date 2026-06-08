@@ -40,4 +40,6 @@ export interface AppState {
   pinLock: boolean;
   pin: string;
   darkMode: boolean;
+  expenseCategories: string[];
+  incomeCategories: string[];
 }

@@ -1,27 +1,79 @@
-import { useState } from 'react';
-import { User, Wallet, Calculator, Coins, RefreshCw, Tags, Moon, Lock, CloudUpload, Bell, LogOut, ChevronRight } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { User, Wallet, Calculator, Coins, RefreshCw, Tags, Moon, Lock, CloudUpload, Bell, LogOut, ChevronRight, Download, Upload } from 'lucide-react';
 import { useStore } from '../store';
 import AccountsModal from './AccountsModal';
 import BudgetModal from './BudgetModal';
 import NotificationsModal from './NotificationsModal';
+import ManageCategoriesModal from './ManageCategoriesModal';
+import PinSetupModal from './PinSetupModal';
 
 export default function Profile() {
-  const { user, currency, darkMode, pinLock, setCurrency, logout, toggleDarkMode, togglePinLock } = useStore();
+  const store = useStore();
+  const { user, currency, darkMode, pinLock, setCurrency, logout, toggleDarkMode, togglePinLock, importData } = store;
+  
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [showAccountsModal, setShowAccountsModal] = useState(false);
   const [showBudgetModal, setShowBudgetModal] = useState(false);
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
+  const [showCategoriesModal, setShowCategoriesModal] = useState(false);
+  const [showPinSetupModal, setShowPinSetupModal] = useState(false);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExportData = () => {
+    const data = localStorage.getItem('simzy-storage');
+    if (data) {
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `simzy-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const handleImportData = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const content = event.target?.result as string;
+          // Parse structure inside persistent storage
+          const parsed = JSON.parse(content);
+          if (parsed.state) {
+             const success = importData(JSON.stringify(parsed.state));
+             if (success) {
+               alert('Data imported successfully!');
+               window.location.reload();
+             } else {
+               alert('Invalid backup file structure.');
+             }
+          } else {
+             alert('Invalid backup file.');
+          }
+        } catch (err) {
+          alert('Failed to parse backup file.');
+        }
+      };
+      reader.readAsText(file);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const menuItems = [
     { icon: Wallet, label: 'My Accounts', desc: 'Manage multiple savings accounts', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/30 dark:bg-emerald-900/30', action: () => setShowAccountsModal(true) },
     { icon: Calculator, label: 'Budget Planning', desc: 'Set monthly spending limits', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/30 dark:bg-blue-900/30', action: () => setShowBudgetModal(true) },
     { icon: Coins, label: 'Currency Settings', desc: `Default: ${currency}`, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/30 dark:bg-amber-900/30', action: () => setShowCurrencyModal(true) },
-    { icon: RefreshCw, label: 'Recurring Transactions', desc: 'Auto-repeat income & expenses', color: 'text-purple-600', bg: 'bg-purple-50', action: () => alert('Recurring feature coming soon!') },
-    { icon: Tags, label: 'Manage Categories', desc: 'Add, edit, or delete categories', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/30 dark:bg-emerald-900/30', action: () => alert('Categories management coming soon!') },
+    { icon: Tags, label: 'Manage Categories', desc: 'Add, edit, or delete categories', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/30 dark:bg-emerald-900/30', action: () => setShowCategoriesModal(true) },
     { icon: Moon, label: 'Dark Mode', desc: 'Toggle appearance', color: 'text-slate-600 dark:text-slate-300', bg: 'bg-slate-100 dark:bg-slate-800', toggle: darkMode, action: toggleDarkMode },
-    { icon: Lock, label: 'PIN Lock', desc: 'Secure app with 4-digit PIN', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/30 dark:bg-emerald-900/30', toggle: pinLock, action: togglePinLock },
-    { icon: CloudUpload, label: 'Cloud Backup', desc: 'Backup to cloud storage', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/30 dark:bg-blue-900/30', action: () => alert('Backup feature coming soon!') },
-    { icon: Bell, label: 'Notifications', desc: 'Reminders & alerts', color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/30 dark:bg-amber-900/30', action: () => setShowNotificationsModal(true) },
+    { icon: Lock, label: 'PIN Lock', desc: 'Secure app with 4-digit PIN', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/30 dark:bg-emerald-900/30', action: () => setShowPinSetupModal(true), toggle: pinLock },
+    { icon: Download, label: 'Export Backup', desc: 'Save data to a file', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/30 dark:bg-blue-900/30', action: handleExportData },
+    { icon: Upload, label: 'Import Backup', desc: 'Restore data from a file', color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/30 dark:bg-amber-900/30', action: () => fileInputRef.current?.click() },
+    { icon: Bell, label: 'Notifications', desc: 'Reminders & alerts', color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/30', action: () => setShowNotificationsModal(true) },
   ];
 
   const handleCurrencyChange = (curr: string) => {
@@ -94,9 +146,13 @@ export default function Profile() {
         </div>
       )}
 
+      <input type="file" accept=".json" className="hidden" ref={fileInputRef} onChange={handleImportData} />
+
       <AccountsModal isOpen={showAccountsModal} onClose={() => setShowAccountsModal(false)} />
       <BudgetModal isOpen={showBudgetModal} onClose={() => setShowBudgetModal(false)} />
       <NotificationsModal isOpen={showNotificationsModal} onClose={() => setShowNotificationsModal(false)} />
+      <ManageCategoriesModal isOpen={showCategoriesModal} onClose={() => setShowCategoriesModal(false)} />
+      <PinSetupModal isOpen={showPinSetupModal} onClose={() => setShowPinSetupModal(false)} />
     </div>
   );
 }

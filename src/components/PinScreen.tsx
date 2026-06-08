@@ -4,9 +4,10 @@ import { Delete, Lock } from 'lucide-react';
 
 interface PinScreenProps {
   onSuccess: () => void;
+  onBack?: () => void;
 }
 
-export default function PinScreen({ onSuccess }: PinScreenProps) {
+export default function PinScreen({ onSuccess, onBack }: PinScreenProps) {
   const { pin } = useStore();
   const [input, setInput] = useState('');
   const [error, setError] = useState(false);
@@ -36,7 +37,15 @@ export default function PinScreen({ onSuccess }: PinScreenProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-5 text-slate-800 dark:text-slate-100">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-5 text-slate-800 dark:text-slate-100 relative">
+      {onBack && (
+        <button 
+          onClick={onBack} 
+          className="absolute top-5 left-5 p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 transition-colors"
+        >
+          Back
+        </button>
+      )}
       <div className="mb-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600">
           <Lock size={32} />

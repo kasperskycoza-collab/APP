@@ -10,7 +10,7 @@ import { useStore } from './store';
 import { LogIn } from 'lucide-react';
 
 export default function App() {
-  const { isLoggedIn, pinLock, darkMode, login } = useStore();
+  const { isLoggedIn, pinLock, darkMode, login, logout } = useStore();
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [email, setEmail] = useState('');
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -51,7 +51,7 @@ export default function App() {
   }
 
   if (pinLock && !isUnlocked) {
-    return <PinScreen onSuccess={() => setIsUnlocked(true)} />;
+    return <PinScreen onSuccess={() => setIsUnlocked(true)} onBack={logout} />;
   }
 
   return (

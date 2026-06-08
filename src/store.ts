@@ -15,6 +15,10 @@ interface StoreState extends AppState {
   updateGoalStatus: (id: number, amount: number, accountId?: string) => void;
   toggleDarkMode: () => void;
   togglePinLock: () => void;
+  setPin: (pin: string) => void;
+  importData: (data: string) => boolean;
+  addCategory: (type: 'income' | 'expense', category: string) => void;
+  deleteCategory: (type: 'income' | 'expense', category: string) => void;
 }
 
 export const useStore = create<StoreState>()(
@@ -29,6 +33,8 @@ export const useStore = create<StoreState>()(
       pinLock: false,
       pin: '',
       darkMode: false,
+      expenseCategories: ['food', 'transport', 'rent', 'shopping', 'bills', 'health', 'education', 'other'],
+      incomeCategories: ['salary', 'freelance', 'investments', 'gifts', 'other'],
 
       login: (email) => set({ user: { name: email.split('@')[0], email }, isLoggedIn: true }),
       
@@ -175,7 +181,32 @@ export const useStore = create<StoreState>()(
 
       setCurrency: (currency) => set({ currency }),
       toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
-      togglePinLock: () => set((state) => ({ pinLock: !state.pinLock }))
+      togglePinLock: () => set((state) => ({ pinLock: !state.pinLock })),
+      setPin: (pin) => set({ pin }),
+      importData: (dataStr: string) => {
+        try {
+          const parsed = JSON.parse(dataStr);
+          if (parsed && typeof parsed === 'object' && parsed.transactions) {
+            set((state) => ({ ...state, ...parsed }));
+            return true;
+          }
+          return false;
+        } catch(e) {
+          return false;
+        }
+      },
+      addCategory: (type, category) => set((state) => {
+        if (type === 'income') {
+          return { incomeCategories: [...state.incomeCategories, category] };
+        }
+        return { expenseCategories: [...state.expenseCategories, category] };
+      }),
+      deleteCategory: (type, category) => set((state) => {
+        if (type === 'income') {
+          return { incomeCategories: state.incomeCategories.filter(c => c !== category) };
+        }
+        return { expenseCategories: state.expenseCategories.filter(c => c !== category) };
+      })
     }),
     {
       name: 'simzy-storage',

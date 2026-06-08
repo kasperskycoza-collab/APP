@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ArrowDown, ArrowUp, Plus, Search, Filter, Trash2, Edit2, List, AlignLeft, ChevronDown, Target } from 'lucide-react';
+import { ArrowDown, ArrowUp, Plus, Search, Filter, Trash2, Edit2, List, AlignLeft, ChevronDown, Target, RefreshCw } from 'lucide-react';
 import { useStore } from '../store';
 import AddTransactionModal from './AddTransactionModal';
 import EditTransactionModal from './EditTransactionModal';
@@ -57,57 +57,65 @@ export default function Transactions() {
   const renderTransactionCard = (t: Transaction, showAccount: boolean = false) => {
     const isIncome = t.type === 'income';
     return (
-      <div key={t.id} className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col gap-3 group">
-        <div className="flex items-center gap-4">
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${isIncome ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600' : 'bg-red-50 dark:bg-red-900/30 text-red-600'}`}>
-            {isIncome ? <ArrowDown size={20} /> : <ArrowUp size={20} />}
+      <div key={t.id} className="bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col gap-1.5 group">
+        <div className="flex items-center gap-2.5">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isIncome ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600' : 'bg-red-50 dark:bg-red-900/30 text-red-600'}`}>
+            {isIncome ? <ArrowDown size={18} /> : <ArrowUp size={18} />}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-slate-900 dark:text-slate-100 truncate">{t.description}</div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 flex-wrap mt-0.5">
+            <div className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">{t.description}</div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 flex-wrap mt-0.5">
               <span className="capitalize">{t.category}</span>
               <span>•</span>
               <span>{new Date(t.date).toLocaleDateString()}</span>
               {viewMode === 'details' && (
                 <>
                   <span>•</span>
-                  <span className="capitalize px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300">{t.method}</span>
+                  <span className="capitalize px-1 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300">{t.method}</span>
                 </>
               )}
               {t.goalId && (
                 <>
                   <span>•</span>
-                  <span className="flex items-center gap-1 text-amber-600 bg-amber-50 dark:bg-amber-900/30 dark:bg-amber-900/30 px-1.5 py-0.5 rounded font-medium">
-                    <Target size={12} /> Goal
+                  <span className="flex items-center gap-1 text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-1 py-0.5 rounded font-medium">
+                    <Target size={10} /> Goal
+                  </span>
+                </>
+              )}
+              {t.recurring && (
+                <>
+                  <span>•</span>
+                  <span className="flex items-center gap-1 text-purple-600 bg-purple-50 dark:bg-purple-900/30 px-1 py-0.5 rounded font-medium capitalize">
+                    <RefreshCw size={10} /> {t.frequency}
                   </span>
                 </>
               )}
             </div>
           </div>
           <div className="flex flex-col items-end gap-1">
-            <div className={`font-bold ${isIncome ? 'text-emerald-600' : 'text-red-600'}`}>
+            <div className={`font-bold text-sm ${isIncome ? 'text-emerald-600' : 'text-red-600'}`}>
               {isIncome ? '+' : '-'}{formatCurrency(t.amount)}
             </div>
-            <div className="flex gap-1.5">
+            <div className="flex gap-1">
               <button 
                 onClick={() => setEditingTransaction(t)}
-                className="text-slate-400 hover:text-blue-500 transition-colors p-1.5 rounded-md hover:bg-blue-50 dark:bg-blue-900/30 dark:bg-blue-900/30"
+                className="text-slate-400 hover:text-blue-500 transition-colors p-1 rounded-md hover:bg-blue-50 dark:bg-blue-900/30"
                 aria-label="Edit transaction"
               >
-                <Edit2 size={16} />
+                <Edit2 size={14} />
               </button>
               <button 
                 onClick={() => handleDelete(t.id)}
-                className="text-slate-400 hover:text-red-500 transition-colors p-1.5 rounded-md hover:bg-red-50 dark:bg-red-900/30"
+                className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50 dark:bg-red-900/30"
                 aria-label="Delete transaction"
               >
-                <Trash2 size={16} />
+                <Trash2 size={14} />
               </button>
             </div>
           </div>
         </div>
         {viewMode === 'details' && showAccount && (
-          <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800 dark:border-slate-800 mt-1">
+          <div className="flex justify-between items-center text-[11px] text-slate-500 dark:text-slate-400 pt-1.5 border-t border-slate-100 dark:border-slate-800 mt-0.5">
             <span>Account: <span className="font-semibold text-slate-700">{accounts.find(a => a.id === t.account)?.name || 'Unknown'}</span></span>
           </div>
         )}

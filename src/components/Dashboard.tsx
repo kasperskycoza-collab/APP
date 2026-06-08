@@ -1,12 +1,13 @@
-import { useState } from 'react';
-import { ArrowDown, ArrowUp, Target, ArrowRightLeft } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { ArrowDown, ArrowUp, Target, ArrowRightLeft, TrendingUp } from 'lucide-react';
 import { useStore } from '../store';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import AddTransactionModal from './AddTransactionModal';
 import AddGoalModal from './AddGoalModal';
 import TransferModal from './TransferModal';
 
 export default function Dashboard() {
-  const { accounts, transactions, currency } = useStore();
+  const { accounts, transactions, goals, currency } = useStore();
   
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
@@ -21,8 +22,30 @@ export default function Dashboard() {
   const todayExpense = todayTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount);
   };
+
+  const currentMonthTransactions = useMemo(() => {
+    const d = new Date();
+    const month = d.getMonth();
+    const year = d.getFullYear();
+    return transactions.filter(t => {
+      const td = new Date(t.date);
+      return td.getMonth() === month && td.getFullYear() === year;
+    });
+  }, [transactions]);
+
+  const monthlyIncome = currentMonthTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+  const monthlyExpense = currentMonthTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+  
+  const chartData = [
+    { name: 'Income', amount: monthlyIncome, color: '#10b981' },
+    { name: 'Expense', amount: monthlyExpense, color: '#ef4444' }
+  ];
+
+  const totalGoalTarget = goals.reduce((sum, g) => sum + g.target, 0);
+  const totalGoalCurrent = goals.reduce((sum, g) => sum + g.current, 0);
+  const monthlySavingsProgress = totalGoalTarget > 0 ? (totalGoalCurrent / totalGoalTarget) * 100 : 0;
 
   return (
     <div className="pb-24">
@@ -77,6 +100,42 @@ export default function Dashboard() {
           <ArrowRightLeft className="text-blue-500" size={24} />
           <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">Transfer</span>
         </button>
+      </div>
+
+      <div className="px-5 mb-6">
+        <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <h2 className="font-bold flex items-center gap-2 text-slate-800 dark:text-slate-100 mb-4">
+            <TrendingUp size={18} className="text-blue-500" /> This Month
+          </h2>
+          
+          <div className="h-32 mb-6">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                <XAxis dataKey="name" axisLine={false} tickLine={false} className="text-xs" />
+                <YAxis axisLine={false} tickLine={false} className="text-xs" opacity={0.5} tickFormatter={(val) => val.toLocaleString()} />
+                <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                <Bar dataKey="amount" radius={[4, 4, 0, 0]} maxBarSize={40}>
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div>
+             <div className="flex justify-between text-sm mb-1">
+               <span className="font-semibold text-slate-600 dark:text-slate-300">Overall Goals Progress</span>
+               <span className="font-bold text-slate-800 dark:text-slate-100">{Math.round(monthlySavingsProgress)}%</span>
+             </div>
+             <div className="h-2.5 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden">
+               <div 
+                 className="h-full bg-emerald-500 transition-all duration-1000" 
+                 style={{ width: `${Math.min(monthlySavingsProgress, 100)}%` }}
+               ></div>
+             </div>
+          </div>
+        </div>
       </div>
 
       <div className="px-5">
