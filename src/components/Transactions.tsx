@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { formatCurrency as formatMoney } from '../utils';
 import { ArrowDown, ArrowUp, Plus, Search, Filter, Trash2, Edit2, List, AlignLeft, ChevronDown, Target, RefreshCw } from 'lucide-react';
 import { useStore } from '../store';
 import AddTransactionModal from './AddTransactionModal';
@@ -7,6 +8,27 @@ import { Transaction } from '../types';
 
 type SortOption = 'date_desc' | 'date_asc' | 'amount_desc' | 'amount_asc';
 type ViewMode = 'grouped' | 'list' | 'details';
+type TimeGroup = 'month' | 'week' | 'year';
+
+const getWeekNumber = (d: Date) => {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  return `${date.getUTCFullYear()}-W${weekNo}`;
+};
+
+const getPeriodKey = (dateString: string, groupBy: TimeGroup) => {
+  const d = new Date(dateString);
+  if (groupBy === 'year') {
+    return d.getFullYear().toString();
+  }
+  if (groupBy === 'week') {
+    return getWeekNumber(d);
+  }
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+};
 
 export default function Transactions() {
   const { transactions, currency, deleteTransaction, accounts } = useStore();
@@ -14,11 +36,12 @@ export default function Transactions() {
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
   const [sortBy, setSortBy] = useState<SortOption>('date_desc');
   const [viewMode, setViewMode] = useState<ViewMode>('grouped');
+  const [timeGroup, setTimeGroup] = useState<TimeGroup>('month');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
+    return formatMoney(amount, currency);
   };
 
   const filteredTransactions = useMemo(() => {
@@ -40,13 +63,18 @@ export default function Transactions() {
   const groupedTransactions = useMemo(() => {
     return filteredTransactions.reduce((acc, tx) => {
       const accountId = tx.account || 'default';
+      const period = getPeriodKey(tx.date, timeGroup);
+      
       if (!acc[accountId]) {
-        acc[accountId] = [];
+        acc[accountId] = {};
       }
-      acc[accountId].push(tx);
+      if (!acc[accountId][period]) {
+        acc[accountId][period] = [];
+      }
+      acc[accountId][period].push(tx);
       return acc;
-    }, {} as Record<string, Transaction[]>);
-  }, [filteredTransactions]);
+    }, {} as Record<string, Record<string, Transaction[]>>);
+  }, [filteredTransactions, timeGroup]);
 
   const handleDelete = (id: number) => {
     if (window.confirm('Are you sure you want to delete this transaction?')) {
@@ -189,48 +217,86 @@ export default function Transactions() {
             </select>
           </div>
 
-          <div className="flex gap-2">
-            {(['all', 'income', 'expense'] as const).map(type => (
-              <button
-                key={type}
-                onClick={() => setFilterType(type)}
-                className={`flex-1 sm:flex-none px-4 py-1.5 rounded-full text-sm font-semibold capitalize transition-colors ${
-                  filterType === type 
-                    ? 'bg-emerald-600 text-white shadow-sm' 
-                    : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
-                }`}
+          <div className="flex gap-2 items-center flex-wrap">
+            <div className="flex gap-2">
+              {(['all', 'income', 'expense'] as const).map(type => (
+                <button
+                  key={type}
+                  onClick={() => setFilterType(type)}
+                  className={`flex-1 sm:flex-none px-4 py-1.5 rounded-full text-sm font-semibold capitalize transition-colors ${
+                    filterType === type 
+                      ? 'bg-emerald-600 text-white shadow-sm' 
+                      : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
+                  }`}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+            {viewMode === 'grouped' && (
+              <select
+                value={timeGroup}
+                onChange={(e) => setTimeGroup(e.target.value as TimeGroup)}
+                className="text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-lg px-3 py-1.5 cursor-pointer focus:outline-none focus:border-emerald-500 transition-colors ml-auto"
               >
-                {type}
-              </button>
-            ))}
+                <option value="month">Monthly</option>
+                <option value="week">Weekly</option>
+                <option value="year">Yearly</option>
+              </select>
+            )}
           </div>
         </div>
 
         <div className="space-y-6">
           {viewMode === 'grouped' ? (
-            Object.entries(groupedTransactions).map(([accountId, data]) => {
-              const txs = data as Transaction[];
+            Object.entries(groupedTransactions).map(([accountId, periodsMap]) => {
               const account = accounts.find(a => a.id === accountId);
               const accountName = account ? account.name : 'Unknown Account';
               
-              const totalIncome = txs.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-              const totalExpense = txs.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-              const netBalance = totalIncome - totalExpense;
-              
               return (
-                <div key={accountId} className="space-y-3">
-                  <div className="flex flex-col border-b border-slate-200 dark:border-slate-700 pb-2">
-                    <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                      {accountName}
-                    </h3>
-                    <div className="flex gap-3 text-xs mt-1">
-                      <span className="text-emerald-600 font-medium">Income (+): {formatCurrency(totalIncome)}</span>
-                      <span className="text-red-500 font-medium">Expense (-): {formatCurrency(totalExpense)}</span>
-                      <span className="text-slate-700 font-medium whitespace-nowrap">Net: {formatCurrency(netBalance)}</span>
-                    </div>
-                  </div>
-                  {txs.map(t => renderTransactionCard(t, false))}
+                <div key={accountId} className="space-y-4 mb-8 bg-slate-50 dark:bg-slate-800/30 p-4 rounded-xl border border-slate-100 dark:border-slate-800 mx-[-8px]">
+                  <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 text-lg pb-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm"></span>
+                    {accountName}
+                  </h3>
+
+                  {Object.entries(periodsMap as Record<string, Transaction[]>).map(([period, txs]) => {
+                    const totalIncome = txs.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+                    const totalExpense = txs.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+                    const netBalance = totalIncome - totalExpense;
+
+                    // Group categories
+                    const categorySums = txs.reduce((cAcc, t) => {
+                       cAcc[t.category] = (cAcc[t.category] || 0) + t.amount;
+                       return cAcc;
+                    }, {} as Record<string, number>);
+                    const categoryEntries = Object.entries(categorySums).sort((a,b) => b[1] - a[1]);
+
+                    return (
+                      <div key={period} className="space-y-3 pl-3.5 border-l-2 border-slate-200 dark:border-slate-700">
+                        <div className="flex flex-col pb-1">
+                          <h4 className="font-semibold text-slate-700 dark:text-slate-200">{period}</h4>
+                          <div className="flex gap-4 text-xs mt-1 bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-100 dark:border-slate-700 inline-flex w-fit shadow-sm">
+                            <span className="text-emerald-600 font-medium">In: {formatCurrency(totalIncome)}</span>
+                            <span className="text-red-500 font-medium">Out: {formatCurrency(totalExpense)}</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-bold border-l border-slate-200 dark:border-slate-700 pl-4">Net: {formatCurrency(netBalance)}</span>
+                          </div>
+                          {categoryEntries.length > 0 && (
+                            <div className="mt-2 text-[11px] flex gap-2 flex-wrap text-slate-600 dark:text-slate-400">
+                              {categoryEntries.map(([cat, amt]) => (
+                                <span key={cat} className="bg-slate-200/70 dark:bg-slate-800 px-2 py-1 rounded capitalize border border-slate-200 dark:border-slate-700">
+                                  {cat}: <span className="font-medium text-slate-700 dark:text-slate-300">{formatCurrency(amt)}</span>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          {txs.map(t => renderTransactionCard(t, false))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })

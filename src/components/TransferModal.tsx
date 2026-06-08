@@ -75,8 +75,8 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center sm:p-5 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-800 w-full sm:max-w-md rounded-2xl m-4 max-h-[90vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 bg-slate-900/50 z-[60] flex items-center justify-center p-5 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-slate-800 w-full sm:max-w-md rounded-2xl flex flex-col max-h-[85vh] shadow-2xl animate-in zoom-in-95 duration-300">
         <div className="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-800 dark:border-slate-800 flex-shrink-0">
           <h2 className="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <ArrowRightLeft className="text-blue-500" size={20} />
@@ -87,7 +87,7 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
           </button>
         </div>
 
-        <div className="overflow-y-auto p-5 flex-1">
+        <div className="overflow-y-auto custom-scrollbar p-5 flex-1">
           <form id="transfer-form" onSubmit={handleSubmit} className="space-y-4">
             {error && <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 rounded-lg text-sm">{error}</div>}
 

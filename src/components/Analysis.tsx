@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { formatCurrency as formatMoney } from '../utils';
 import { useStore } from '../store';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { Filter, Download, PieChart as PieChartIcon, Wallet } from 'lucide-react';
@@ -8,7 +9,7 @@ export default function Analysis() {
   const [period, setPeriod] = useState('monthly');
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
+    return formatMoney(amount, currency);
   };
 
   const COLORS = ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#6b7280'];

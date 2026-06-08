@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { formatCurrency as formatMoney } from '../utils';
 import { useStore } from '../store';
 import { Target, Plus, Edit2, Trash2, PlusCircle } from 'lucide-react';
 import AddGoalModal from './AddGoalModal';
@@ -13,7 +14,7 @@ export default function Goals() {
   const [fundingGoal, setFundingGoal] = useState<Goal | null>(null);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
+    return formatMoney(amount, currency);
   };
 
   const handleDelete = (id: number) => {

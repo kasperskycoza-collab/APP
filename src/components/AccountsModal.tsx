@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { formatCurrency as formatMoney } from '../utils';
 import { useStore } from '../store';
 import { X, Wallet, Trash2 } from 'lucide-react';
 
@@ -36,17 +37,18 @@ export default function AccountsModal({ isOpen, onClose }: AccountsModalProps) {
   };
 
   const handleDelete = (id: string) => {
-    useStore.setState(state => ({
-      accounts: state.accounts.filter(a => a.id !== id || a.isDefault),
-      // we might need to migrate transactions to default if deleting, but we skip complex logic here
-    }));
+    if (window.confirm('Delete this account?')) {
+      useStore.setState(state => ({
+        accounts: state.accounts.filter(a => a.id !== id || a.isDefault),
+      }));
+    }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center sm:p-5 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-800 w-full sm:max-w-md rounded-2xl m-4 max-h-[90vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 bg-slate-900/50 z-[60] flex items-center justify-center p-5 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-slate-800 w-full sm:max-w-md rounded-2xl flex flex-col max-h-[75vh] shadow-2xl animate-in zoom-in-95 duration-300">
         <div className="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-800 dark:border-slate-800 flex-shrink-0">
           <h2 className="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <Wallet className="text-emerald-500" size={20} />
@@ -57,7 +59,7 @@ export default function AccountsModal({ isOpen, onClose }: AccountsModalProps) {
           </button>
         </div>
 
-        <div className="overflow-y-auto p-5 flex-1">
+        <div className="overflow-y-auto custom-scrollbar p-5 flex-1">
           <div className="space-y-3">
             {accounts.map(acc => (
               <div key={acc.id} className="p-4 border border-slate-200 dark:border-slate-700 rounded-xl flex justify-between items-center bg-slate-50 dark:bg-slate-900">
@@ -67,7 +69,7 @@ export default function AccountsModal({ isOpen, onClose }: AccountsModalProps) {
                     {acc.isDefault && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full uppercase">Default</span>}
                   </div>
                   <div className="text-sm font-semibold text-emerald-600 mt-1">
-                    {new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(acc.balance)}
+                    {formatMoney(acc.balance, currency)}
                   </div>
                 </div>
                 {!acc.isDefault && (

@@ -124,13 +124,13 @@ export default function Profile() {
       </div>
 
       {showCurrencyModal && (
-        <div className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-5 backdrop-blur-sm">
+        <div className="fixed inset-0 bg-slate-900/50 z-[60] flex items-center justify-center p-5 backdrop-blur-sm">
           <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-xs overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
               <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">Select Currency</h3>
               <button onClick={() => setShowCurrencyModal(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-200 text-slate-500 dark:text-slate-400 hover:bg-slate-300 transition-colors">×</button>
             </div>
-            <div className="p-2 max-h-80 overflow-y-auto">
+            <div className="p-2 max-h-80 overflow-y-auto custom-scrollbar">
               {['USD', 'EUR', 'GBP', 'TZS', 'KES', 'NGN', 'ZAR', 'INR'].map(curr => (
                 <div 
                   key={curr} 

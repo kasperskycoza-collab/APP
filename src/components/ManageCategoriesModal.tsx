@@ -30,8 +30,8 @@ export default function ManageCategoriesModal({ isOpen, onClose }: ManageCategor
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-5 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-800 w-full sm:max-w-md rounded-2xl max-h-[90vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 bg-slate-900/50 z-[60] flex items-center justify-center p-5 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-slate-800 w-full sm:max-w-md rounded-2xl max-h-[85vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-300">
         <div className="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
           <h2 className="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <Tags className="text-emerald-500" size={20} />
@@ -75,7 +75,7 @@ export default function ManageCategoriesModal({ isOpen, onClose }: ManageCategor
           </div>
         </div>
 
-        <div className="overflow-y-auto p-4 flex-1 space-y-2">
+        <div className="overflow-y-auto custom-scrollbar p-4 flex-1 space-y-2">
           {categories.map((cat, idx) => (
             <div key={idx} className="flex items-center justify-between p-3 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 group">
               <span className="font-medium capitalize text-slate-700 dark:text-slate-300">{cat}</span>

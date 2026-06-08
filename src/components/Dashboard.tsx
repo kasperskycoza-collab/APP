@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { formatCurrency as formatMoney } from '../utils';
 import { ArrowDown, ArrowUp, Target, ArrowRightLeft, TrendingUp } from 'lucide-react';
 import { useStore } from '../store';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
@@ -22,7 +23,7 @@ export default function Dashboard() {
   const todayExpense = todayTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount);
+    return formatMoney(amount, currency, 0);
   };
 
   const currentMonthTransactions = useMemo(() => {
@@ -108,7 +109,7 @@ export default function Dashboard() {
             <TrendingUp size={18} className="text-blue-500" /> This Month
           </h2>
           
-          <div className="h-32 mb-6">
+          <div style={{ width: '100%', height: 130 }} className="mb-6">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                 <XAxis dataKey="name" axisLine={false} tickLine={false} className="text-xs" />
