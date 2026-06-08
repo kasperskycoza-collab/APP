@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store';
 import { X, Plus, Trash2, Tags } from 'lucide-react';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 
 interface ManageCategoriesModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ export default function ManageCategoriesModal({ isOpen, onClose }: ManageCategor
   const { incomeCategories, expenseCategories, addCategory, deleteCategory } = useStore();
   const [activeTab, setActiveTab] = useState<'expense' | 'income'>('expense');
   const [newCat, setNewCat] = useState('');
+  const [deletingCat, setDeletingCat] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -24,8 +26,13 @@ export default function ManageCategoriesModal({ isOpen, onClose }: ManageCategor
   };
 
   const handleDelete = (cat: string) => {
-    if (window.confirm('Delete this category?')) {
-      deleteCategory(activeTab, cat);
+    setDeletingCat(cat);
+  };
+
+  const confirmDelete = () => {
+    if (deletingCat) {
+      deleteCategory(activeTab, deletingCat);
+      setDeletingCat(null);
     }
   };
 
@@ -86,6 +93,14 @@ export default function ManageCategoriesModal({ isOpen, onClose }: ManageCategor
           ))}
         </div>
       </div>
+
+      <ConfirmDeleteModal
+        isOpen={deletingCat !== null}
+        onClose={() => setDeletingCat(null)}
+        onConfirm={confirmDelete}
+        title="Delete Category"
+        message="Are you sure you want to delete this category? Past transactions using this category will not be affected."
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { formatCurrency as formatMoney } from '../utils';
 import { useStore } from '../store';
 import { X, Calculator, Trash2 } from 'lucide-react';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 
 interface BudgetModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export default function BudgetModal({ isOpen, onClose }: BudgetModalProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [category, setCategory] = useState('food');
   const [limit, setLimit] = useState('');
+  const [deletingBudget, setDeletingBudget] = useState<string | null>(null);
 
   const expenseCategories = ['food', 'transport', 'rent', 'shopping', 'bills', 'health', 'education', 'other'];
 
@@ -29,20 +31,25 @@ export default function BudgetModal({ isOpen, onClose }: BudgetModalProps) {
   };
 
   const handleDelete = (cat: string) => {
-    if (window.confirm('Delete this budget limit?')) {
+    setDeletingBudget(cat);
+  };
+
+  const confirmDelete = () => {
+    if (deletingBudget) {
       setBudgets(prev => {
         const next = { ...prev };
-        delete next[cat];
+        delete next[deletingBudget];
         return next;
       });
+      setDeletingBudget(null);
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 z-[60] flex items-center justify-center p-5 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-800 w-full sm:max-w-md rounded-2xl flex flex-col max-h-[75vh] shadow-2xl animate-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 bg-slate-900/50 z-40 flex items-center justify-center p-5 pb-[5.5rem] backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-slate-800 w-full sm:max-w-md rounded-2xl flex flex-col max-h-[100%] shadow-2xl animate-in zoom-in-95 duration-300">
         <div className="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-800 dark:border-slate-800 flex-shrink-0">
           <h2 className="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <Calculator className="text-blue-500" size={20} />
@@ -130,6 +137,14 @@ export default function BudgetModal({ isOpen, onClose }: BudgetModalProps) {
           </div>
         </div>
       </div>
+
+      <ConfirmDeleteModal
+        isOpen={deletingBudget !== null}
+        onClose={() => setDeletingBudget(null)}
+        onConfirm={confirmDelete}
+        title="Delete Budget"
+        message="Are you sure you want to delete this budget limit?"
+      />
     </div>
   );
 }

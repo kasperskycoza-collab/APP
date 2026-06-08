@@ -5,6 +5,7 @@ import { Target, Plus, Edit2, Trash2, PlusCircle } from 'lucide-react';
 import AddGoalModal from './AddGoalModal';
 import EditGoalModal from './EditGoalModal';
 import FundGoalModal from './FundGoalModal';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 import { Goal } from '../types';
 
 export default function Goals() {
@@ -12,14 +13,20 @@ export default function Goals() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [fundingGoal, setFundingGoal] = useState<Goal | null>(null);
+  const [deletingGoalId, setDeletingGoalId] = useState<number | null>(null);
 
   const formatCurrency = (amount: number) => {
     return formatMoney(amount, currency);
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this goal?')) {
-      deleteGoal(id);
+    setDeletingGoalId(id);
+  };
+
+  const confirmDelete = () => {
+    if (deletingGoalId !== null) {
+      deleteGoal(deletingGoalId);
+      setDeletingGoalId(null);
     }
   };
 
@@ -30,7 +37,7 @@ export default function Goals() {
           <div className="text-xl font-bold flex items-center gap-2">Savings Goals</div>
           <button 
             onClick={() => setIsAddOpen(true)}
-            className="w-10 h-10 rounded-full bg-white dark:bg-slate-800/20 flex items-center justify-center backdrop-blur-sm transition-transform active:scale-95"
+            className="w-10 h-10 rounded-full bg-black/10 dark:bg-slate-800/20 flex items-center justify-center backdrop-blur-sm transition-transform active:scale-95 text-white"
           >
             <Plus size={20} />
           </button>
@@ -112,6 +119,14 @@ export default function Goals() {
         isOpen={!!fundingGoal}
         onClose={() => setFundingGoal(null)}
         goal={fundingGoal}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={deletingGoalId !== null}
+        onClose={() => setDeletingGoalId(null)}
+        onConfirm={confirmDelete}
+        title="Delete Savings Goal"
+        message="Are you sure you want to delete this savings goal? This will not affect your transactions."
       />
     </div>
   );

@@ -55,18 +55,18 @@ export default function Dashboard() {
           <div className="text-xl font-bold">Simzy</div>
         </div>
         
-        <div className="bg-white dark:bg-slate-800/15 backdrop-blur-md rounded-2xl p-5 text-center border border-white/20">
+        <div className="bg-white/10 dark:bg-slate-800/15 backdrop-blur-md rounded-2xl p-5 text-center border border-white/20">
           <div className="text-xs uppercase tracking-wide opacity-90 mb-2">Total Savings Balance</div>
           <div className="text-4xl font-extrabold mb-4">{formatCurrency(totalBalance)}</div>
           
           <div className="flex justify-between gap-3">
-            <div className="flex-1 bg-white dark:bg-slate-800/10 rounded-xl p-3">
+            <div className="flex-1 bg-white/10 dark:bg-slate-800/10 rounded-xl p-3">
               <div className="text-xs opacity-80 mb-1">Today's Income</div>
-              <div className="text-lg font-bold text-emerald-300">+{formatCurrency(todayIncome)}</div>
+              <div className="text-lg font-bold text-emerald-100">+{formatCurrency(todayIncome)}</div>
             </div>
-            <div className="flex-1 bg-white dark:bg-slate-800/10 rounded-xl p-3">
+            <div className="flex-1 bg-white/10 dark:bg-slate-800/10 rounded-xl p-3">
               <div className="text-xs opacity-80 mb-1">Today's Expenses</div>
-              <div className="text-lg font-bold text-red-300">-{formatCurrency(todayExpense)}</div>
+              <div className="text-lg font-bold text-red-100">-{formatCurrency(todayExpense)}</div>
             </div>
           </div>
         </div>

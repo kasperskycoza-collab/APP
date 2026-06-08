@@ -84,7 +84,7 @@ export default function Profile() {
   return (
     <div className="pb-24">
       <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 text-white p-10 text-center rounded-b-2xl shadow-md">
-        <div className="w-20 h-20 bg-white dark:bg-slate-800/20 rounded-full mx-auto mb-4 border-4 border-white/30 flex items-center justify-center">
+        <div className="w-20 h-20 bg-black/10 dark:bg-slate-800/20 rounded-full mx-auto mb-4 border-4 border-white/30 flex items-center justify-center text-white">
           <User size={36} />
         </div>
         <h2 className="text-2xl font-bold mb-1">{user?.name}</h2>

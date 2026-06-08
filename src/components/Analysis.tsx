@@ -7,6 +7,7 @@ import { Filter, Download, PieChart as PieChartIcon, Wallet } from 'lucide-react
 export default function Analysis() {
   const { transactions, currency, accounts } = useStore();
   const [period, setPeriod] = useState('monthly');
+  const [activeAccount, setActiveAccount] = useState<string>('all');
 
   const formatCurrency = (amount: number) => {
     return formatMoney(amount, currency);
@@ -14,25 +15,31 @@ export default function Analysis() {
 
   const COLORS = ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#6b7280'];
 
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(t => activeAccount === 'all' || (t.account || 'default') === activeAccount);
+  }, [transactions, activeAccount]);
+
   const stats = useMemo(() => {
     // Basic filter logic (mocked for simplicity, in real app filter by period dates)
-    const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-    const expense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+    const income = filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+    const expense = filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
     const net = income - expense;
-    return { income, expense, net, count: transactions.length };
-  }, [transactions, period]);
+    return { income, expense, net, count: filteredTransactions.length };
+  }, [filteredTransactions, period]);
 
   const accountBalances = useMemo(() => {
     const balances: Record<string, { income: number; expense: number; net: number }> = {};
     
     // Initialize balances for all accounts
-    if (accounts) {
+    if (activeAccount === 'all' && accounts) {
       accounts.forEach(acc => {
         balances[acc.id] = { income: 0, expense: 0, net: 0 };
       });
+    } else if (activeAccount !== 'all') {
+      balances[activeAccount] = { income: 0, expense: 0, net: 0 };
     }
     
-    transactions.forEach(t => {
+    filteredTransactions.forEach(t => {
       const accId = t.account || 'default';
       if (!balances[accId]) {
         balances[accId] = { income: 0, expense: 0, net: 0 };
@@ -47,10 +54,10 @@ export default function Analysis() {
     });
     
     return balances;
-  }, [transactions, accounts]);
+  }, [filteredTransactions, accounts, activeAccount]);
 
   const expenseBreakdown = useMemo(() => {
-    const expenses = transactions.filter(t => t.type === 'expense');
+    const expenses = filteredTransactions.filter(t => t.type === 'expense');
     const categories: Record<string, number> = {};
     expenses.forEach(t => {
       categories[t.category] = (categories[t.category] || 0) + t.amount;
@@ -58,13 +65,13 @@ export default function Analysis() {
     return Object.entries(categories)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
-  }, [transactions, period]);
+  }, [filteredTransactions, period]);
 
   const barChartData = useMemo(() => {
     // Generate simple last 7 items or mocked dates
     // In a real scenario, this aggregates correctly by date
     const grouped: Record<string, { income: number, expense: number }> = {};
-    const recentTx = [...transactions].reverse().slice(0, 50); // Get latest for display
+    const recentTx = [...filteredTransactions].reverse().slice(0, 50); // Get latest for display
     recentTx.forEach(t => {
       const dateKey = new Date(t.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
       if (!grouped[dateKey]) grouped[dateKey] = { income: 0, expense: 0 };
@@ -82,14 +89,40 @@ export default function Analysis() {
       <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 text-white p-5 sticky top-0 z-10 shadow-md">
         <div className="flex justify-between items-center">
           <div className="text-xl font-bold flex items-center gap-2">Audit & Analysis</div>
-          <button className="w-10 h-10 rounded-full bg-white dark:bg-slate-800/20 flex items-center justify-center backdrop-blur-sm">
+          <button className="w-10 h-10 rounded-full bg-black/10 dark:bg-slate-800/20 flex items-center justify-center backdrop-blur-sm text-white">
             <Download size={20} />
           </button>
         </div>
       </div>
 
       <div className="p-5">
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-none">
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none custom-scrollbar">
+          <button
+            onClick={() => setActiveAccount('all')}
+            className={`whitespace-nowrap px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+              activeAccount === 'all' 
+                ? 'bg-emerald-600 text-white shadow-sm' 
+                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+            }`}
+          >
+            All Accounts
+          </button>
+          {accounts.map(acc => (
+            <button
+              key={acc.id}
+              onClick={() => setActiveAccount(acc.id)}
+              className={`whitespace-nowrap px-4 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2 ${
+                activeAccount === acc.id 
+                  ? 'bg-emerald-600 text-white shadow-sm' 
+                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+              }`}
+            >
+              {acc.name}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-none custom-scrollbar">
           {['daily', 'weekly', 'monthly', 'yearly'].map(p => (
             <button
               key={p}
@@ -171,6 +204,8 @@ export default function Analysis() {
                     outerRadius={80}
                     paddingAngle={5}
                     dataKey="value"
+                    label={({ percent }) => percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : null}
+                    labelLine={false}
                   >
                     {expenseBreakdown.map((entry, index) => (
                       <Cell key={index} fill={COLORS[index % COLORS.length]} />

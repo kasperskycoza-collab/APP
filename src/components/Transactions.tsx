@@ -4,11 +4,12 @@ import { ArrowDown, ArrowUp, Plus, Search, Filter, Trash2, Edit2, List, AlignLef
 import { useStore } from '../store';
 import AddTransactionModal from './AddTransactionModal';
 import EditTransactionModal from './EditTransactionModal';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 import { Transaction } from '../types';
 
 type SortOption = 'date_desc' | 'date_asc' | 'amount_desc' | 'amount_asc';
 type ViewMode = 'grouped' | 'list' | 'details';
-type TimeGroup = 'month' | 'week' | 'year';
+type TimeGroup = 'daily' | 'month' | 'week' | 'year';
 
 const getWeekNumber = (d: Date) => {
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -20,6 +21,10 @@ const getWeekNumber = (d: Date) => {
 
 const getPeriodKey = (dateString: string, groupBy: TimeGroup) => {
   const d = new Date(dateString);
+  if (groupBy === 'daily') {
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${monthNames[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  }
   if (groupBy === 'year') {
     return d.getFullYear().toString();
   }
@@ -39,6 +44,7 @@ export default function Transactions() {
   const [timeGroup, setTimeGroup] = useState<TimeGroup>('month');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [deletingTransactionId, setDeletingTransactionId] = useState<number | null>(null);
 
   const formatCurrency = (amount: number) => {
     return formatMoney(amount, currency);
@@ -77,8 +83,13 @@ export default function Transactions() {
   }, [filteredTransactions, timeGroup]);
 
   const handleDelete = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this transaction?')) {
-      deleteTransaction(id);
+    setDeletingTransactionId(id);
+  };
+
+  const confirmDelete = () => {
+    if (deletingTransactionId !== null) {
+      deleteTransaction(deletingTransactionId);
+      setDeletingTransactionId(null);
     }
   };
 
@@ -156,7 +167,7 @@ export default function Transactions() {
       <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 text-white p-5 sticky top-0 z-20 shadow-md">
         <div className="flex justify-between items-center mb-4">
           <div className="text-xl font-bold flex items-center gap-2">Cash Book</div>
-          <button onClick={() => setIsAddOpen(true)} className="w-10 h-10 rounded-full bg-white dark:bg-slate-800/20 flex items-center justify-center backdrop-blur-sm">
+          <button onClick={() => setIsAddOpen(true)} className="w-10 h-10 rounded-full bg-black/10 dark:bg-slate-800/20 flex items-center justify-center backdrop-blur-sm text-white">
             <Plus size={20} />
           </button>
         </div>
@@ -167,7 +178,7 @@ export default function Transactions() {
             placeholder="Search transactions..." 
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full bg-white dark:bg-slate-800/10 border border-white/20 rounded-xl py-2 pl-10 pr-4 text-white placeholder-white/60 focus:outline-none focus:border-white transition-colors"
+            className="w-full bg-black/10 dark:bg-slate-800/10 border border-white/20 rounded-xl py-2 pl-10 pr-4 text-white placeholder-white/60 focus:outline-none focus:border-white transition-colors"
           />
         </div>
       </div>
@@ -208,7 +219,7 @@ export default function Transactions() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 rounded-lg px-3 py-2 cursor-pointer focus:outline-none focus:border-emerald-500 transition-colors"
+              className="text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-lg px-3 py-2 cursor-pointer focus:outline-none focus:border-emerald-500 transition-colors hidden sm:block"
             >
               <option value="date_desc">Newest First</option>
               <option value="date_asc">Oldest First</option>
@@ -239,11 +250,22 @@ export default function Transactions() {
                 onChange={(e) => setTimeGroup(e.target.value as TimeGroup)}
                 className="text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-lg px-3 py-1.5 cursor-pointer focus:outline-none focus:border-emerald-500 transition-colors ml-auto"
               >
-                <option value="month">Monthly</option>
+                <option value="daily">Daily</option>
                 <option value="week">Weekly</option>
+                <option value="month">Monthly</option>
                 <option value="year">Yearly</option>
               </select>
             )}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              className="text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-lg px-3 py-2 cursor-pointer focus:outline-none focus:border-emerald-500 transition-colors sm:hidden w-full mt-2"
+            >
+              <option value="date_desc">Newest First</option>
+              <option value="date_asc">Oldest First</option>
+              <option value="amount_desc">Highest Amount</option>
+              <option value="amount_asc">Lowest Amount</option>
+            </select>
           </div>
         </div>
 
@@ -254,9 +276,9 @@ export default function Transactions() {
               const accountName = account ? account.name : 'Unknown Account';
               
               return (
-                <div key={accountId} className="space-y-4 mb-8 bg-slate-50 dark:bg-slate-800/30 p-4 rounded-xl border border-slate-100 dark:border-slate-800 mx-[-8px]">
-                  <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 text-lg pb-1">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm"></span>
+                <div key={accountId} className="space-y-4 mb-8 bg-slate-50 dark:bg-slate-800/30 p-4 rounded-xl border border-slate-100 dark:border-slate-800 mx-[-8px] sm:mx-0">
+                  <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 text-xl pb-2 border-b border-slate-200 dark:border-slate-700">
+                    <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm"></span>
                     {accountName}
                   </h3>
 
@@ -273,10 +295,10 @@ export default function Transactions() {
                     const categoryEntries = Object.entries(categorySums).sort((a,b) => b[1] - a[1]);
 
                     return (
-                      <div key={period} className="space-y-3 pl-3.5 border-l-2 border-slate-200 dark:border-slate-700">
+                      <div key={period} className="space-y-3 pl-3.5 border-l-2 border-slate-300 dark:border-slate-600 ml-1.5 mt-4">
                         <div className="flex flex-col pb-1">
                           <h4 className="font-semibold text-slate-700 dark:text-slate-200">{period}</h4>
-                          <div className="flex gap-4 text-xs mt-1 bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-100 dark:border-slate-700 inline-flex w-fit shadow-sm">
+                          <div className="flex gap-4 text-xs mt-1 bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-100 dark:border-slate-700 inline-flex w-fit shadow-sm flex-wrap">
                             <span className="text-emerald-600 font-medium">In: {formatCurrency(totalIncome)}</span>
                             <span className="text-red-500 font-medium">Out: {formatCurrency(totalExpense)}</span>
                             <span className="text-slate-700 dark:text-slate-300 font-bold border-l border-slate-200 dark:border-slate-700 pl-4">Net: {formatCurrency(netBalance)}</span>
@@ -284,8 +306,8 @@ export default function Transactions() {
                           {categoryEntries.length > 0 && (
                             <div className="mt-2 text-[11px] flex gap-2 flex-wrap text-slate-600 dark:text-slate-400">
                               {categoryEntries.map(([cat, amt]) => (
-                                <span key={cat} className="bg-slate-200/70 dark:bg-slate-800 px-2 py-1 rounded capitalize border border-slate-200 dark:border-slate-700">
-                                  {cat}: <span className="font-medium text-slate-700 dark:text-slate-300">{formatCurrency(amt)}</span>
+                                <span key={cat} className="bg-slate-200/70 dark:bg-slate-700/50 px-2.5 py-1.5 rounded-lg capitalize font-medium flex items-center gap-1 border border-slate-200 dark:border-slate-700">
+                                  {cat} <span className="text-slate-800 dark:text-slate-200 ml-1">{formatCurrency(amt)}</span>
                                 </span>
                               ))}
                             </div>
@@ -324,6 +346,12 @@ export default function Transactions() {
         isOpen={!!editingTransaction}
         onClose={() => setEditingTransaction(null)}
         transaction={editingTransaction}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={deletingTransactionId !== null}
+        onClose={() => setDeletingTransactionId(null)}
+        onConfirm={confirmDelete}
       />
     </div>
   );
