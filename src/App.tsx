@@ -49,10 +49,14 @@ export default function App() {
   };
 
   const handleEmailAction = async (isSignUp: boolean) => {
+    if (!hasFirebaseConfig) {
+      const userIdentifier = email || 'Guest';
+      const name = userIdentifier.includes('@') ? userIdentifier.split('@')[0] : userIdentifier;
+      login({ email: userIdentifier, name });
+      return;
+    }
     if (!auth || !email || !password) {
-      if (!hasFirebaseConfig) {
-        login({ email }); // Fallback offline
-      }
+      setError('Please enter a valid email and password');
       return;
     }
     setError('');
@@ -81,18 +85,20 @@ export default function App() {
           
           <input 
             type="email" 
-            placeholder="Email Address" 
-            className="w-full bg-white/20 border border-white/30 rounded-xl p-4 text-white placeholder-white/60 mb-4 focus:outline-none focus:border-white"
+            placeholder={hasFirebaseConfig ? "Email Address" : "Enter a Name or Email to start"} 
+            className={`w-full bg-white/20 border border-white/30 rounded-xl p-4 text-white placeholder-white/60 focus:outline-none focus:border-white ${hasFirebaseConfig ? 'mb-4' : 'mb-6'}`}
             value={email}
             onChange={e => setEmail(e.target.value)}
           />
-          <input 
-            type="password" 
-            placeholder="Password" 
-            className="w-full bg-white/20 border border-white/30 rounded-xl p-4 text-white placeholder-white/60 mb-6 focus:outline-none focus:border-white"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-          />
+          {hasFirebaseConfig && (
+            <input 
+              type="password" 
+              placeholder="Password" 
+              className="w-full bg-white/20 border border-white/30 rounded-xl p-4 text-white placeholder-white/60 mb-6 focus:outline-none focus:border-white"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+            />
+          )}
 
           {hasFirebaseConfig ? (
             <div className="space-y-3">

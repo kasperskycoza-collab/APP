@@ -11,7 +11,12 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-const hasFirebaseConfig = !!firebaseConfig.apiKey;
+const hasFirebaseConfig = Boolean(
+  firebaseConfig.apiKey && 
+  firebaseConfig.apiKey !== 'undefined' && 
+  firebaseConfig.apiKey !== 'null' &&
+  firebaseConfig.apiKey.length > 5
+);
 
 let app;
 let auth: ReturnType<typeof getAuth> | null = null;
