@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../store';
 import { X, ArrowRightLeft } from 'lucide-react';
+import { evaluateMath } from '../utils';
 
 interface TransferModalProps {
   isOpen: boolean;
@@ -22,8 +23,8 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
     e.preventDefault();
     setError('');
 
-    const parsedAmount = parseFloat(amount);
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+    const parsedAmount = evaluateMath(amount);
+    if (parsedAmount === null || parsedAmount <= 0) {
       setError('Please enter a valid amount');
       return;
     }
@@ -48,7 +49,7 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
     addTransaction({
       type: 'expense',
       amount: parsedAmount,
-      category: 'other',
+      category: 'transfer',
       date,
       description: `Transfer to ${toAcc?.name}: ${description}`,
       method: 'transfer',
@@ -60,7 +61,7 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
     addTransaction({
       type: 'income',
       amount: parsedAmount,
-      category: 'other',
+      category: 'transfer',
       date,
       description: `Transfer from ${fromAcc.name}: ${description}`,
       method: 'transfer',
@@ -100,7 +101,7 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
                   className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:border-blue-500 focus:outline-none transition-colors text-sm bg-white dark:bg-slate-800"
                 >
                   {accounts.map(acc => (
-                    <option key={acc.id} value={acc.id}>{acc.name} (${acc.balance})</option>
+                    <option key={acc.id} value={acc.id}>{acc.name} ({acc.balance})</option>
                   ))}
                 </select>
               </div>
@@ -121,11 +122,14 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
             <div>
               <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">Amount</label>
               <input
-                type="number"
-                step="0.01"
-                placeholder="0.00"
+                type="text"
+                placeholder="0.00 (e.g. 50 + 20)"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
+                onBlur={() => {
+                  const result = evaluateMath(amount);
+                  if (result !== null) setAmount(result.toString());
+                }}
                 className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:border-blue-500 focus:outline-none transition-colors text-lg"
               />
             </div>

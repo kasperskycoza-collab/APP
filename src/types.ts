@@ -31,7 +31,7 @@ export interface Account {
 }
 
 export interface AppState {
-  user: { name: string; email: string } | null;
+  user: { id?: string; name: string; email: string; photoURL?: string } | null;
   accounts: Account[];
   transactions: Transaction[];
   goals: Goal[];

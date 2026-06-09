@@ -10,7 +10,7 @@ export default function Analysis() {
   const [activeAccount, setActiveAccount] = useState<string>('all');
 
   const formatCurrency = (amount: number) => {
-    return formatMoney(amount, currency);
+    return formatMoney(amount, currency, 0);
   };
 
   const COLORS = ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#6b7280'];
@@ -138,22 +138,22 @@ export default function Analysis() {
           ))}
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-center">
-            <div className="text-xl font-bold text-emerald-600 mb-1">{formatCurrency(stats.income)}</div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium tracking-wide uppercase">Income</div>
+        <div className="grid grid-cols-2 gap-2 mb-6">
+          <div className="bg-white dark:bg-slate-800 p-2 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-center min-w-0">
+            <div className="text-sm sm:text-base font-bold text-emerald-600 mb-0.5 whitespace-nowrap overflow-hidden text-ellipsis" title={formatCurrency(stats.income)}>{formatCurrency(stats.income)}</div>
+            <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium tracking-wide uppercase truncate">Income</div>
           </div>
-          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-center">
-            <div className="text-xl font-bold text-red-600 mb-1">{formatCurrency(stats.expense)}</div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium tracking-wide uppercase">Expenses</div>
+          <div className="bg-white dark:bg-slate-800 p-2 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-center min-w-0">
+            <div className="text-sm sm:text-base font-bold text-red-600 mb-0.5 whitespace-nowrap overflow-hidden text-ellipsis" title={formatCurrency(stats.expense)}>{formatCurrency(stats.expense)}</div>
+            <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium tracking-wide uppercase truncate">Expenses</div>
           </div>
-          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-center">
-            <div className="text-xl font-bold text-emerald-800 mb-1">{formatCurrency(stats.net)}</div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium tracking-wide uppercase">Net Savings</div>
+          <div className="bg-white dark:bg-slate-800 p-2 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-center min-w-0">
+            <div className="text-sm sm:text-base font-bold text-emerald-800 mb-0.5 whitespace-nowrap overflow-hidden text-ellipsis" title={formatCurrency(stats.net)}>{formatCurrency(stats.net)}</div>
+            <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium tracking-wide uppercase truncate">Net Savings</div>
           </div>
-          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-center">
-            <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-1">{stats.count}</div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium tracking-wide uppercase">Transactions</div>
+          <div className="bg-white dark:bg-slate-800 p-2 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-center min-w-0">
+            <div className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 mb-0.5 whitespace-nowrap overflow-hidden text-ellipsis">{stats.count}</div>
+            <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium tracking-wide uppercase truncate">Transactions</div>
           </div>
         </div>
 
@@ -171,12 +171,23 @@ export default function Analysis() {
                 const acc = accounts?.find(a => a.id === accId);
                 const name = acc ? acc.name : 'Unknown Account';
                 return (
-                  <div key={accId} className="p-3 border border-slate-100 dark:border-slate-800 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 rounded-lg">
-                    <div className="font-semibold text-slate-800 dark:text-slate-100 mb-2">{name}</div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-emerald-600">+ {formatCurrency(balancesData.income)}</span>
-                      <span className="text-red-500">- {formatCurrency(balancesData.expense)}</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-100">Net: {formatCurrency(balancesData.net)}</span>
+                  <div key={accId} className="p-3 sm:p-4 border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 rounded-xl flex flex-col gap-2.5">
+                    <div className="font-semibold text-slate-800 dark:text-slate-100 text-sm sm:text-base">{name}</div>
+                    <div className="flex flex-col gap-1.5 w-full text-xs sm:text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500 dark:text-slate-400 font-medium">Income</span>
+                        <span className="text-emerald-600 font-semibold max-w-[60%] truncate" title={'+' + formatCurrency(balancesData.income)}>+{formatCurrency(balancesData.income)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500 dark:text-slate-400 font-medium">Expenses</span>
+                        <span className="text-red-500 font-semibold max-w-[60%] truncate" title={'-' + formatCurrency(balancesData.expense)}>-{formatCurrency(balancesData.expense)}</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2 border-t border-slate-200 dark:border-slate-700 mt-0.5">
+                        <span className="font-semibold text-slate-700 dark:text-slate-300">Net balance</span>
+                        <span className={`font-bold max-w-[60%] truncate ${balancesData.net >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`} title={(balancesData.net >= 0 ? '+' : '') + formatCurrency(balancesData.net)}>
+                          {balancesData.net >= 0 ? '+' : ''}{formatCurrency(balancesData.net)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 );
@@ -241,10 +252,10 @@ export default function Analysis() {
           {barChartData.length > 0 ? (
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={barChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <BarChart data={barChartData} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(value) => `$${value}`} />
+                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={(value) => formatCurrency(value)} width={80} />
                   <Tooltip 
                     formatter={(value: number) => formatCurrency(value)}
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}

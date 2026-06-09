@@ -131,8 +131,8 @@ export default function Transactions() {
               )}
             </div>
           </div>
-          <div className="flex flex-col items-end gap-1">
-            <div className={`font-bold text-sm ${isIncome ? 'text-emerald-600' : 'text-red-600'}`}>
+          <div className="flex flex-col items-end gap-1 flex-shrink-0 ml-2">
+            <div className={`font-bold text-sm whitespace-nowrap ${isIncome ? 'text-emerald-600' : 'text-red-600'}`}>
               {isIncome ? '+' : '-'}{formatCurrency(t.amount)}
             </div>
             <div className="flex gap-1">

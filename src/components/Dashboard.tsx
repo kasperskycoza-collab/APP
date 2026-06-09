@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { formatCurrency as formatMoney } from '../utils';
 import { ArrowDown, ArrowUp, Target, ArrowRightLeft, TrendingUp } from 'lucide-react';
 import { useStore } from '../store';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 import AddTransactionModal from './AddTransactionModal';
 import AddGoalModal from './AddGoalModal';
 import TransferModal from './TransferModal';
@@ -40,8 +40,7 @@ export default function Dashboard() {
   const monthlyExpense = currentMonthTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
   
   const chartData = [
-    { name: 'Income', amount: monthlyIncome, color: '#10b981' },
-    { name: 'Expense', amount: monthlyExpense, color: '#ef4444' }
+    { name: 'Month', income: monthlyIncome, expense: monthlyExpense }
   ];
 
   const totalGoalTarget = goals.reduce((sum, g) => sum + g.target, 0);
@@ -57,16 +56,16 @@ export default function Dashboard() {
         
         <div className="bg-white/10 dark:bg-slate-800/15 backdrop-blur-md rounded-2xl p-5 text-center border border-white/20">
           <div className="text-xs uppercase tracking-wide opacity-90 mb-2">Total Savings Balance</div>
-          <div className="text-4xl font-extrabold mb-4">{formatCurrency(totalBalance)}</div>
+          <div className="text-2xl sm:text-3xl font-extrabold mb-4 break-words">{formatCurrency(totalBalance)}</div>
           
-          <div className="flex justify-between gap-3">
-            <div className="flex-1 bg-white/10 dark:bg-slate-800/10 rounded-xl p-3">
-              <div className="text-xs opacity-80 mb-1">Today's Income</div>
-              <div className="text-lg font-bold text-emerald-100">+{formatCurrency(todayIncome)}</div>
+          <div className="flex justify-between gap-3 overflow-hidden">
+            <div className="flex-1 bg-white/10 dark:bg-slate-800/10 rounded-xl p-3 min-w-0">
+              <div className="text-xs opacity-80 mb-1 truncate">Today's Income</div>
+              <div className="text-base sm:text-lg font-bold text-emerald-100 break-words">+{formatCurrency(todayIncome)}</div>
             </div>
-            <div className="flex-1 bg-white/10 dark:bg-slate-800/10 rounded-xl p-3">
-              <div className="text-xs opacity-80 mb-1">Today's Expenses</div>
-              <div className="text-lg font-bold text-red-100">-{formatCurrency(todayExpense)}</div>
+            <div className="flex-1 bg-white/10 dark:bg-slate-800/10 rounded-xl p-3 min-w-0">
+              <div className="text-xs opacity-80 mb-1 truncate">Today's Expenses</div>
+              <div className="text-base sm:text-lg font-bold text-red-100 break-words">-{formatCurrency(todayExpense)}</div>
             </div>
           </div>
         </div>
@@ -111,15 +110,17 @@ export default function Dashboard() {
           
           <div style={{ width: '100%', height: 130 }} className="mb-6">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                <XAxis dataKey="name" axisLine={false} tickLine={false} className="text-xs" />
-                <YAxis axisLine={false} tickLine={false} className="text-xs" opacity={0.5} tickFormatter={(val) => val.toLocaleString()} />
-                <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                <Bar dataKey="amount" radius={[4, 4, 0, 0]} maxBarSize={40}>
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
+              <BarChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={(val) => formatCurrency(val)} width={80} />
+                <Tooltip 
+                  formatter={(value: number) => formatCurrency(value)}
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  cursor={{ fill: '#f8fafc' }}
+                />
+                <Bar dataKey="income" name="Income" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="expense" name="Expense" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>

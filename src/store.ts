@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { AppState, Transaction, Goal, Account } from './types';
 
 interface StoreState extends AppState {
-  login: (email: string) => void;
+  login: (userInfo: { email: string; name?: string; photoURL?: string; id?: string }) => void;
   logout: () => void;
   addTransaction: (tx: Omit<Transaction, 'id'>) => void;
   editTransaction: (id: number, tx: Partial<Omit<Transaction, 'id'>>) => void;
@@ -33,10 +33,18 @@ export const useStore = create<StoreState>()(
       pinLock: false,
       pin: '',
       darkMode: false,
-      expenseCategories: ['food', 'transport', 'rent', 'shopping', 'bills', 'health', 'education', 'other'],
-      incomeCategories: ['salary', 'freelance', 'investments', 'gifts', 'other'],
+      expenseCategories: ['food', 'transport', 'rent', 'shopping', 'bills', 'health', 'education', 'transfer', 'other'],
+      incomeCategories: ['salary', 'freelance', 'investments', 'gifts', 'transfer', 'other'],
 
-      login: (email) => set({ user: { name: email.split('@')[0], email }, isLoggedIn: true }),
+      login: (userInfo) => set({ 
+        user: { 
+          name: userInfo.name || userInfo.email.split('@')[0], 
+          email: userInfo.email,
+          photoURL: userInfo.photoURL,
+          id: userInfo.id
+        }, 
+        isLoggedIn: true 
+      }),
       
       logout: () => set({ user: null, isLoggedIn: false }),
       

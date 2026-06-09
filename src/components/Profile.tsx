@@ -1,11 +1,13 @@
-import { useState, useRef } from 'react';
-import { User, Wallet, Calculator, Coins, RefreshCw, Tags, Moon, Lock, CloudUpload, Bell, LogOut, ChevronRight, Download, Upload } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { User, Wallet, Calculator, Coins, Tags, Moon, Lock, Bell, LogOut, ChevronRight, Download, Upload, Cloud } from 'lucide-react';
 import { useStore } from '../store';
 import AccountsModal from './AccountsModal';
 import BudgetModal from './BudgetModal';
 import NotificationsModal from './NotificationsModal';
 import ManageCategoriesModal from './ManageCategoriesModal';
 import PinSetupModal from './PinSetupModal';
+import { auth, db, hasFirebaseConfig } from '../firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 export default function Profile() {
   const store = useStore();
@@ -64,11 +66,59 @@ export default function Profile() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handleCloudBackup = async () => {
+    if (!hasFirebaseConfig || !auth?.currentUser || !db) {
+      alert("Cloud backup is not available. Please login to an online account.");
+      return;
+    }
+    try {
+      const state = localStorage.getItem('simzy-storage');
+      if (state) {
+        await setDoc(doc(db, 'backups', auth.currentUser.uid), {
+          data: state,
+          updatedAt: new Date().toISOString()
+        });
+        alert("Successfully backed up to Google Cloud Sync!");
+      }
+    } catch (err) {
+      alert("Failed to backup to cloud.");
+    }
+  };
+
+  const handleCloudRestore = async () => {
+    if (!hasFirebaseConfig || !auth?.currentUser || !db) {
+      alert("Cloud restore is not available.");
+      return;
+    }
+    try {
+      const docSnap = await getDoc(doc(db, 'backups', auth.currentUser.uid));
+      if (docSnap.exists()) {
+        const stateStr = docSnap.data().data;
+        const parsed = JSON.parse(stateStr);
+        if (parsed.state) {
+          const success = importData(JSON.stringify(parsed.state));
+          if (success) {
+            alert('Data restored from cloud successfully!');
+            window.location.reload();
+          } else {
+            alert('Invalid cloud backup data.');
+          }
+        }
+      } else {
+        alert('No cloud backup found.');
+      }
+    } catch (err) {
+      alert("Failed to restore from cloud.");
+    }
+  };
+
   const menuItems = [
     { icon: Wallet, label: 'My Accounts', desc: 'Manage multiple savings accounts', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/30 dark:bg-emerald-900/30', action: () => setShowAccountsModal(true) },
     { icon: Calculator, label: 'Budget Planning', desc: 'Set monthly spending limits', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/30 dark:bg-blue-900/30', action: () => setShowBudgetModal(true) },
     { icon: Coins, label: 'Currency Settings', desc: `Default: ${currency}`, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/30 dark:bg-amber-900/30', action: () => setShowCurrencyModal(true) },
     { icon: Tags, label: 'Manage Categories', desc: 'Add, edit, or delete categories', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/30 dark:bg-emerald-900/30', action: () => setShowCategoriesModal(true) },
+    { icon: Cloud, label: 'Cloud Sync', desc: 'Backup to Google Cloud', color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/30', action: handleCloudBackup },
+    { icon: Cloud, label: 'Cloud Restore', desc: 'Restore from Google Cloud', color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/30', action: handleCloudRestore },
     { icon: Moon, label: 'Dark Mode', desc: 'Toggle appearance', color: 'text-slate-600 dark:text-slate-300', bg: 'bg-slate-100 dark:bg-slate-800', toggle: darkMode, action: toggleDarkMode },
     { icon: Lock, label: 'PIN Lock', desc: 'Secure app with 4-digit PIN', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/30 dark:bg-emerald-900/30', action: () => setShowPinSetupModal(true), toggle: pinLock },
     { icon: Download, label: 'Export Backup', desc: 'Save data to a file', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/30 dark:bg-blue-900/30', action: handleExportData },
@@ -81,11 +131,22 @@ export default function Profile() {
     setShowCurrencyModal(false);
   };
 
+  const handleLogout = async () => {
+    if (auth && hasFirebaseConfig) {
+      await auth.signOut();
+    }
+    logout();
+  };
+
   return (
     <div className="pb-24">
       <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 text-white p-10 text-center rounded-b-2xl shadow-md">
-        <div className="w-20 h-20 bg-black/10 dark:bg-slate-800/20 rounded-full mx-auto mb-4 border-4 border-white/30 flex items-center justify-center text-white">
-          <User size={36} />
+        <div className="w-20 h-20 bg-black/10 dark:bg-slate-800/20 rounded-full mx-auto mb-4 border-4 border-white/30 flex items-center justify-center text-white overflow-hidden">
+          {user?.photoURL ? (
+            <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+          ) : (
+            <User size={36} />
+          )}
         </div>
         <h2 className="text-2xl font-bold mb-1">{user?.name}</h2>
         <p className="opacity-80 text-sm">{user?.email}</p>
@@ -111,7 +172,7 @@ export default function Profile() {
           </div>
         ))}
 
-        <div onClick={logout} className="flex items-center p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm mt-4 active:bg-red-50 dark:bg-red-900/30 transition-colors cursor-pointer">
+        <div onClick={handleLogout} className="flex items-center p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm mt-4 active:bg-red-50 dark:bg-red-900/30 transition-colors cursor-pointer">
           <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 mr-4 flex-shrink-0">
             <LogOut size={20} />
           </div>
