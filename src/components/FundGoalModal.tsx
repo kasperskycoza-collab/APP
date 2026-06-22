@@ -67,6 +67,10 @@ export default function FundGoalModal({ isOpen, onClose, goal }: FundGoalModalPr
     return formatMoney(amount, currency);
   };
 
+  const formatGoalCurrency = (amount: number) => {
+    return formatMoney(amount, currency, 0);
+  };
+
   return (
     <div className="fixed inset-0 bg-slate-900/50 z-[60] flex items-center justify-center p-5 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white dark:bg-slate-800 w-full sm:max-w-md rounded-2xl flex flex-col max-h-[85vh] shadow-2xl animate-in zoom-in-95 duration-300">
@@ -87,7 +91,7 @@ export default function FundGoalModal({ isOpen, onClose, goal }: FundGoalModalPr
             <div className="mb-2">
               <h3 className="font-bold text-slate-800 dark:text-slate-100 mb-1">{goal.name}</h3>
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                Remaining: <span className="font-bold text-emerald-600">{formatCurrency(goal.target - goal.current)}</span>
+                Remaining: <span className="font-bold text-emerald-600">{formatGoalCurrency(goal.target - goal.current)}</span>
               </p>
             </div>
 

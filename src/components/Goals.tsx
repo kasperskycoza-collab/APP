@@ -18,7 +18,7 @@ export default function Goals() {
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
 
   const formatCurrency = (amount: number) => {
-    return formatMoney(amount, currency);
+    return formatMoney(amount, currency, 0);
   };
 
   const handleDelete = (id: number) => {

@@ -148,8 +148,8 @@ export default function TransactionDetailsModal({
                   ></div>
                 </div>
                 <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400">
-                  <span>Saved: {formatCurrency(goal.current)}</span>
-                  <span>Target: {formatCurrency(goal.target)}</span>
+                  <span>Saved: {formatMoney(goal.current, currency, 0)}</span>
+                  <span>Target: {formatMoney(goal.target, currency, 0)}</span>
                 </div>
               </div>
             )}

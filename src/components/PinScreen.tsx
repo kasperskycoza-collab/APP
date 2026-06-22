@@ -47,11 +47,11 @@ export default function PinScreen({ onSuccess, onBack }: PinScreenProps) {
         </button>
       )}
       <div className="mb-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600">
+        <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/50 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600">
           <Lock size={32} />
         </div>
         <h2 className="text-2xl font-bold mb-2">Enter PIN</h2>
-        <p className="text-slate-500 dark:text-slate-400">Please enter your 4-digit PIN to access Simzy</p>
+        <p className="text-slate-500 dark:text-slate-400">Please enter your 4-digit PIN to access Simzy Cash Saver</p>
         <p className="text-xs text-slate-400 mt-2">(Default: 1234 if not set)</p>
       </div>
 

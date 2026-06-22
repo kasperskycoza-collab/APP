@@ -103,8 +103,8 @@ export default function Dashboard() {
   return (
     <div className="pb-24">
       <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 text-white p-5 rounded-b-2xl shadow-lg relative z-10">
-        <div className="flex justify-between items-center mb-5">
-          <div className="text-xl font-bold">Simzy</div>
+        <div className="flex justify-between items-center mb-6 mt-1">
+          <div className="text-2xl font-extrabold tracking-tight">Simzy Cash Saver</div>
         </div>
         
         <div className="bg-white/10 dark:bg-slate-800/15 backdrop-blur-md rounded-2xl p-5 text-center border border-white/20">

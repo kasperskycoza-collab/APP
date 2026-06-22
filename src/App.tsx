@@ -7,7 +7,7 @@ import Analysis from './components/Analysis';
 import BottomNav from './components/BottomNav';
 import PinScreen from './components/PinScreen';
 import { useStore } from './store';
-import { LogIn, Key, Mail } from 'lucide-react';
+import { LogIn, Key, Mail, Wallet } from 'lucide-react';
 import { auth, provider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, hasFirebaseConfig } from './firebase';
 
 export default function App() {
@@ -76,8 +76,11 @@ export default function App() {
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen bg-emerald-700 flex flex-col items-center justify-center p-5 text-white">
-        <div className="text-4xl font-extrabold mb-2 text-center">Simzy Cash Saver</div>
-        <div className="opacity-80 mb-10 text-center">Your Personal Digital Cash Book</div>
+        <div className="w-24 h-24 rounded-full mb-6 shadow-xl border-4 border-white/20 bg-emerald-600 flex items-center justify-center">
+          <Wallet size={48} className="text-white" />
+        </div>
+        <div className="text-3xl font-extrabold mb-2 text-center">Simzy Cash Saver</div>
+        <div className="opacity-80 mb-8 text-center text-sm">Your Personal Digital Cash Book</div>
         
         <div className="w-full max-w-sm bg-white/10 p-6 rounded-2xl backdrop-blur-sm border border-white/20">
           {error && <div className="bg-red-500/20 text-red-100 p-3 rounded-xl mb-4 text-sm text-center border border-red-500/30">{error}</div>}

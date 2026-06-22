@@ -29,7 +29,15 @@ export default function GoalDetailsModal({
 
   const percentage = Math.min((goal.current / goal.target) * 100, 100);
   const isCompleted = goal.current >= goal.target;
-  const formatCurrency = (amount: number) => formatMoney(amount, currency);
+  const formatCurrency = (amount: number) => formatMoney(amount, currency, 0);
+
+  const getFontSizeClass = (formattedStr: string) => {
+    const len = formattedStr.length;
+    if (len > 12) return "text-[9px] xs:text-[10px] sm:text-xs";
+    if (len > 9) return "text-[10px] xs:text-xs sm:text-xs";
+    if (len > 7) return "text-xs sm:text-sm";
+    return "text-sm sm:text-sm";
+  };
 
   // Filter transactions related to this goal
   const relatedTransactions = transactions
@@ -142,22 +150,24 @@ export default function GoalDetailsModal({
           </div>
 
           {/* Amount breakdown grids */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="p-3 border border-slate-100 dark:border-slate-800 bg-emerald-50/10 rounded-xl space-y-0.5 text-center">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="p-2 sm:p-3 border border-slate-100 dark:border-slate-800 bg-emerald-50/10 rounded-xl space-y-0.5 text-center min-w-0">
               <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">Saved</span>
-              <p className="font-extrabold text-xs sm:text-sm text-emerald-600 truncate">{formatCurrency(goal.current)}</p>
+              <p className={`font-extrabold text-emerald-600 break-all select-all ${getFontSizeClass(formatCurrency(goal.current))}`}>{formatCurrency(goal.current)}</p>
             </div>
-            <div className="p-3 border border-slate-100 dark:border-slate-800 bg-slate-50/10 rounded-xl space-y-0.5 text-center">
+            <div className="p-2 sm:p-3 border border-slate-100 dark:border-slate-800 bg-slate-50/10 rounded-xl space-y-0.5 text-center min-w-0">
               <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">Target</span>
-              <p className="font-extrabold text-xs sm:text-sm text-slate-700 dark:text-slate-300 truncate">{formatCurrency(goal.target)}</p>
+              <p className={`font-extrabold text-slate-700 dark:text-slate-300 break-all select-all ${getFontSizeClass(formatCurrency(goal.target))}`}>{formatCurrency(goal.target)}</p>
             </div>
-            <div className={`p-3 border rounded-xl space-y-0.5 text-center ${
+            <div className={`p-2 sm:p-3 border rounded-xl space-y-0.5 text-center min-w-0 ${
               isCompleted 
                 ? 'bg-orange-50/20 border-orange-200 dark:border-orange-500/10' 
                 : 'border-slate-100 dark:border-slate-800 bg-slate-50/10'
             }`}>
               <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">Remaining</span>
-              <p className={`font-extrabold text-xs sm:text-sm truncate ${isCompleted ? 'text-orange-500' : 'text-red-500'}`}>
+              <p className={`font-extrabold break-all select-all ${
+                isCompleted ? 'text-orange-500 text-xs sm:text-sm' : `${getFontSizeClass(formatCurrency(goal.target - goal.current))} text-red-500`
+              }`}>
                 {isCompleted ? 'None 🎉' : formatCurrency(goal.target - goal.current)}
               </p>
             </div>
