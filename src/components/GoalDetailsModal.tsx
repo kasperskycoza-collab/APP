@@ -54,7 +54,7 @@ export default function GoalDetailsModal({
 
   const getDeadlineStatus = () => {
     if (isCompleted) {
-      return { text: 'Target Reached! 🎉', className: 'text-orange-500 dark:text-orange-400 bg-orange-100/40 dark:bg-orange-950/20 border-orange-200 dark:border-orange-500/20' };
+      return { text: 'Target Reached! 🎉', className: 'text-amber-600 dark:text-amber-400 bg-amber-100/40 dark:bg-amber-950/20 border-amber-200 dark:border-amber-500/20 shadow-sm' };
     }
     if (daysDiff < 0) {
       return { text: `Overdue by ${Math.abs(daysDiff)} days`, className: 'text-rose-500 bg-rose-50 dark:bg-rose-950/25 border-rose-100 dark:border-rose-500/10' };
@@ -73,11 +73,11 @@ export default function GoalDetailsModal({
   return (
     <div className="fixed inset-0 bg-slate-900/50 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl flex flex-col max-h-[90%] shadow-2xl animate-in zoom-in-95 duration-200">
-        
+         
         {/* Header */}
         <div className="flex justify-between items-center p-5 border-b border-slate-100 dark:border-slate-700/50 flex-shrink-0">
           <div className="flex items-center gap-2">
-            <Target className={isCompleted ? 'text-orange-500' : 'text-emerald-600'} size={20} />
+            <Target className={isCompleted ? 'text-amber-500 dark:text-amber-400' : 'text-emerald-600'} size={20} />
             <h2 className="font-bold text-lg text-slate-800 dark:text-slate-100">
               Savings Goal Details
             </h2>
@@ -92,22 +92,22 @@ export default function GoalDetailsModal({
 
         {/* Scrollable Content */}
         <div className="overflow-y-auto custom-scrollbar p-6 space-y-6 flex-1">
-          
+           
           {/* Main Visual Progress */}
           <div className={`p-5 rounded-2xl border text-center relative overflow-hidden transition-colors duration-300 ${
             isCompleted 
-              ? 'bg-orange-50/20 border-orange-200 dark:border-orange-500/20' 
+              ? 'border-amber-300/80 dark:border-amber-500/30 ring-2 ring-amber-400/10 dark:ring-amber-500/5 bg-gradient-to-br from-amber-50/40 to-amber-100/10 dark:from-amber-950/10 dark:to-amber-900/10 shadow-[0_4px_24px_rgba(245,158,11,0.06)]' 
               : 'bg-slate-50 dark:bg-slate-900/40 border-slate-100 dark:border-slate-800'
           }`}>
             {isCompleted && (
-              <div className="absolute top-2 right-2 text-orange-500 animate-pulse">
+              <div className="absolute top-3 right-3 text-amber-500 dark:text-amber-400 animate-pulse">
                 <Sparkles size={18} />
               </div>
             )}
-            
+             
             <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3 ${
               isCompleted 
-                ? 'bg-orange-100 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400' 
+                ? 'bg-amber-100/80 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200/50 dark:border-amber-500/20 shadow-sm' 
                 : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400'
             }`}>
               {isCompleted ? <CheckCircle2 size={32} /> : <TrendingUp size={32} />}
@@ -123,26 +123,28 @@ export default function GoalDetailsModal({
               </p>
             )}
 
-            {/* Orange theme for completed/achieved status, also percentage approached when not completed */}
-            <div className="mt-4 flex flex-col items-center">
-              <span className={`text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider border ${deadlineStatus.className}`}>
+            {/* Custom status badge for achieved or upcoming progress */}
+            <div className="mt-4 flex flex-col items-center animate-bounce">
+              <span className={`text-[10px] sm:text-xs px-3.5 py-1 rounded-full font-black uppercase tracking-wider border ${deadlineStatus.className}`}>
                 {deadlineStatus.text}
               </span>
             </div>
 
             {/* Custom Styled Progress Bar */}
             <div className="mt-5 space-y-1.5">
-              <div className="h-3 bg-slate-100 dark:bg-slate-700/60 rounded-full overflow-hidden">
+              <div className="h-3.5 bg-slate-100 dark:bg-slate-900/60 rounded-full overflow-hidden border border-slate-200/10 dark:border-slate-800/40">
                 <div 
                   className={`h-full rounded-full transition-all duration-700 bg-gradient-to-r ${
-                    isCompleted ? 'from-orange-400 to-orange-500' : 'from-emerald-400 to-emerald-600'
+                    isCompleted 
+                      ? 'from-amber-400 via-yellow-400 to-amber-500 border-r border-amber-300 dark:border-amber-600/20 shadow-[0_0_8px_rgba(245,158,11,0.25)]' 
+                      : 'from-emerald-400 to-emerald-600'
                   }`}
                   style={{ width: `${percentage}%` }}
                 ></div>
               </div>
               <div className="flex justify-between items-center text-xs px-1">
                 <span className="text-slate-500 dark:text-slate-400 font-semibold">{percentage.toFixed(1)}% complete</span>
-                <span className={`font-extrabold ${isCompleted ? 'text-orange-500' : 'text-emerald-500'}`}>
+                <span className={`font-extrabold ${isCompleted ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-500'}`}>
                   {isCompleted ? 'Completed 🎉' : `${percentage.toFixed(0)}% Approached`}
                 </span>
               </div>
@@ -159,14 +161,14 @@ export default function GoalDetailsModal({
               <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">Target</span>
               <p className={`font-extrabold text-slate-700 dark:text-slate-300 break-all select-all ${getFontSizeClass(formatCurrency(goal.target))}`}>{formatCurrency(goal.target)}</p>
             </div>
-            <div className={`p-2 sm:p-3 border rounded-xl space-y-0.5 text-center min-w-0 ${
+            <div className={`p-2 sm:p-3 border rounded-xl space-y-0.5 text-center min-w-0 transition-colors duration-300 ${
               isCompleted 
-                ? 'bg-orange-50/20 border-orange-200 dark:border-orange-500/10' 
+                ? 'border-amber-300 bg-amber-50/20 dark:border-amber-500/20 dark:bg-amber-950/10' 
                 : 'border-slate-100 dark:border-slate-800 bg-slate-50/10'
             }`}>
               <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">Remaining</span>
               <p className={`font-extrabold break-all select-all ${
-                isCompleted ? 'text-orange-500 text-xs sm:text-sm' : `${getFontSizeClass(formatCurrency(goal.target - goal.current))} text-red-500`
+                isCompleted ? 'text-amber-600 dark:text-amber-400 text-xs sm:text-sm' : `${getFontSizeClass(formatCurrency(goal.target - goal.current))} text-red-500`
               }`}>
                 {isCompleted ? 'None 🎉' : formatCurrency(goal.target - goal.current)}
               </p>
