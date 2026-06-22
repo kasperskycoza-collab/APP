@@ -10,7 +10,7 @@ import GoalDetailsModal from './GoalDetailsModal';
 import { Goal } from '../types';
 
 export default function Goals() {
-  const { goals, currency, deleteGoal, transactions } = useStore();
+  const { goals, currency, deleteGoal, transactions, accounts } = useStore();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [fundingGoal, setFundingGoal] = useState<Goal | null>(null);
@@ -160,6 +160,7 @@ export default function Goals() {
         goal={selectedGoal}
         currency={currency}
         transactions={transactions}
+        accounts={accounts}
         onFund={(g) => { setSelectedGoal(null); setFundingGoal(g); }}
         onEdit={(g) => { setSelectedGoal(null); setEditingGoal(g); }}
         onDelete={(id) => { setSelectedGoal(null); handleDelete(id); }}

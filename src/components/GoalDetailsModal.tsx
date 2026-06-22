@@ -1,5 +1,5 @@
-import { X, Calendar, Edit2, Trash2, PlusCircle, Target, TrendingUp, AlertCircle, Sparkles, CheckCircle2 } from 'lucide-react';
-import { Goal, Transaction } from '../types';
+import { X, Calendar, Edit2, Trash2, PlusCircle, Target, TrendingUp, AlertCircle, Sparkles, CheckCircle2, Wallet } from 'lucide-react';
+import { Goal, Transaction, Account } from '../types';
 import { formatCurrency as formatMoney } from '../utils';
 
 interface GoalDetailsModalProps {
@@ -8,6 +8,7 @@ interface GoalDetailsModalProps {
   goal: Goal | null;
   currency: string;
   transactions: Transaction[];
+  accounts: Account[];
   onFund: (goal: Goal) => void;
   onEdit: (goal: Goal) => void;
   onDelete: (id: number) => void;
@@ -19,6 +20,7 @@ export default function GoalDetailsModal({
   goal,
   currency,
   transactions,
+  accounts,
   onFund,
   onEdit,
   onDelete
@@ -61,8 +63,8 @@ export default function GoalDetailsModal({
   const deadlineStatus = getDeadlineStatus();
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-5 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-800 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[90%] sm:max-h-[85%] shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-300">
+    <div className="fixed inset-0 bg-slate-900/50 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl flex flex-col max-h-[90%] shadow-2xl animate-in zoom-in-95 duration-200">
         
         {/* Header */}
         <div className="flex justify-between items-center p-5 border-b border-slate-100 dark:border-slate-700/50 flex-shrink-0">
@@ -183,17 +185,30 @@ export default function GoalDetailsModal({
             </h4>
             
             <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
-              {relatedTransactions.map(tx => (
-                <div key={tx.id} className="p-3 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-100 dark:border-slate-800/60 flex justify-between items-center text-xs">
-                  <div className="min-w-0 pr-2">
-                    <p className="font-semibold text-slate-700 dark:text-slate-200 truncate">{tx.description || 'Goal Funding Record'}</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">{new Date(tx.date).toLocaleDateString()}</p>
+              {relatedTransactions.map(tx => {
+                const account = accounts.find(a => a.id === tx.account);
+                return (
+                  <div key={tx.id} className="p-3 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-100 dark:border-slate-800/60 flex justify-between items-center text-xs">
+                    <div className="min-w-0 pr-2">
+                      <p className="font-semibold text-slate-700 dark:text-slate-200 truncate">{tx.description || 'Goal Funding Record'}</p>
+                      <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400">
+                        <span>{new Date(tx.date).toLocaleDateString()}</span>
+                        {account && (
+                          <>
+                            <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                            <span className="flex items-center gap-0.5 text-slate-500 dark:text-slate-400 font-medium">
+                              <Wallet size={10} className="text-slate-400" /> {account.name}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <span className="font-extrabold text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+                      +{formatCurrency(tx.amount)}
+                    </span>
                   </div>
-                  <span className="font-extrabold text-emerald-600 dark:text-emerald-400 flex-shrink-0">
-                    +{formatCurrency(tx.amount)}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
 
               {relatedTransactions.length === 0 && (
                 <div className="text-center py-6 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl space-y-1.5">

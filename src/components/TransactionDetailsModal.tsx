@@ -35,8 +35,8 @@ export default function TransactionDetailsModal({
   const goal = transaction.goalId ? goals.find(g => g.id === transaction.goalId) : null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-5 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-800 w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[90%] sm:max-h-[85%] shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-300">
+    <div className="fixed inset-0 bg-slate-900/50 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl flex flex-col max-h-[90%] shadow-2xl animate-in zoom-in-95 duration-200">
         
         {/* Header */}
         <div className="flex justify-between items-center p-5 border-b border-slate-100 dark:border-slate-700/50 flex-shrink-0">
@@ -157,7 +157,7 @@ export default function TransactionDetailsModal({
         </div>
 
         {/* Footer actions */}
-        <div className="p-4 border-t border-slate-100 dark:border-slate-700/50 flex-shrink-0 bg-slate-50 dark:bg-slate-900/20 flex items-center gap-3 rounded-b-3xl sm:rounded-b-2xl">
+        <div className="p-4 border-t border-slate-100 dark:border-slate-700/50 flex-shrink-0 bg-slate-50 dark:bg-slate-900/20 flex items-center gap-3 rounded-b-2xl">
           {onEdit && (
             <button 
               onClick={() => onEdit(transaction)}
