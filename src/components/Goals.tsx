@@ -47,26 +47,56 @@ export default function Goals() {
       <div className="p-5 space-y-4">
         {goals.map(goal => {
           const percentage = Math.min((goal.current / goal.target) * 100, 100);
+          const isCompleted = goal.current >= goal.target;
           return (
-            <div key={goal.id} className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col gap-3 group">
+            <div 
+              key={goal.id} 
+              className={`bg-white dark:bg-slate-800 p-5 rounded-xl border shadow-sm flex flex-col gap-3 group transition-all duration-300 ${
+                isCompleted 
+                  ? 'border-orange-300 dark:border-orange-500/30 ring-1 ring-orange-500/10 shadow-[0_4px_12px_rgba(249,115,22,0.06)] bg-orange-50/10' 
+                  : 'border-slate-200 dark:border-slate-700'
+              }`}
+            >
               <div className="flex justify-between items-start mb-1">
                 <div>
-                  <div className="font-bold text-slate-900 dark:text-slate-100">{goal.name}</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">Due {new Date(goal.deadline).toLocaleDateString()}</div>
+                  <div className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 flex-wrap">
+                    {goal.name}
+                    {isCompleted && (
+                      <span className="text-[10px] uppercase font-bold text-orange-500 dark:text-orange-400 animate-pulse">
+                        ★ Achieved
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border ${
+                      isCompleted 
+                        ? 'bg-orange-100/70 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 border-orange-200/50 dark:border-orange-500/20' 
+                        : 'bg-emerald-100/70 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-500/20'
+                    }`}>
+                      {isCompleted ? 'Completed 🎉' : `${percentage.toFixed(0)}% Approached`}
+                    </span>
+                    <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">Due {new Date(goal.deadline).toLocaleDateString()}</span>
+                  </div>
                 </div>
-                <div className="font-bold text-emerald-600 text-lg">{percentage.toFixed(0)}%</div>
+                <div className={`font-extrabold text-lg ${isCompleted ? 'text-orange-500' : 'text-emerald-600'}`}>
+                  {percentage.toFixed(0)}%
+                </div>
               </div>
               
-              <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-1">
+              <div className="h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-1">
                 <div 
-                  className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-500"
+                  className={`h-full rounded-full transition-all duration-500 bg-gradient-to-r ${
+                    isCompleted ? 'from-orange-400 to-orange-500' : 'from-emerald-400 to-emerald-600'
+                  }`}
                   style={{ width: `${percentage}%` }}
                 ></div>
               </div>
               
               <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
-                <span>{formatCurrency(goal.current)} saved</span>
-                <span>{formatCurrency(goal.target - goal.current)} remaining</span>
+                <span>{formatCurrency(goal.current)} saved of {formatCurrency(goal.target)}</span>
+                <span className={`font-semibold ${isCompleted ? 'text-orange-600 dark:text-orange-400' : ''}`}>
+                  {isCompleted ? 'Zero remaining!' : `${formatCurrency(goal.target - goal.current)} remaining`}
+                </span>
               </div>
               
               <div className="flex gap-2 justify-end pt-3 border-t border-slate-100 dark:border-slate-800 dark:border-slate-800">

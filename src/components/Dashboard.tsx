@@ -6,6 +6,8 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Cartes
 import AddTransactionModal from './AddTransactionModal';
 import AddGoalModal from './AddGoalModal';
 import TransferModal from './TransferModal';
+import TransactionDetailsModal from './TransactionDetailsModal';
+import { Transaction } from '../types';
 
 export default function Dashboard() {
   const { accounts, transactions, goals, currency } = useStore();
@@ -14,7 +16,43 @@ export default function Dashboard() {
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
   const [isAddGoalOpen, setIsAddGoalOpen] = useState(false);
   const [isTransferOpen, setIsTransferOpen] = useState(false);
-  
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+
+  const transactionNetBalances = useMemo(() => {
+    // Sort all transactions chronologically (oldest to newest) to compute historical running balance correctly
+    const sortedAll = [...transactions].sort((a, b) => {
+      const timeA = new Date(a.date).getTime();
+      const timeB = new Date(b.date).getTime();
+      if (timeA !== timeB) return timeA - timeB;
+      return a.id - b.id; // tie breaker
+    });
+
+    const txSums: Record<string, number> = {};
+    sortedAll.forEach(tx => {
+      const accId = tx.account || 'default';
+      txSums[accId] = (txSums[accId] || 0) + (tx.type === 'income' ? tx.amount : -tx.amount);
+    });
+
+    const initialBalances: Record<string, number> = {};
+    accounts.forEach(acc => {
+      initialBalances[acc.id] = acc.balance - (txSums[acc.id] || 0);
+    });
+
+    const runningBalances: Record<string, number> = {};
+    const currentRunning: Record<string, number> = { ...initialBalances };
+
+    sortedAll.forEach(tx => {
+      const accId = tx.account || 'default';
+      if (currentRunning[accId] === undefined) {
+        currentRunning[accId] = 0;
+      }
+      currentRunning[accId] += tx.type === 'income' ? tx.amount : -tx.amount;
+      runningBalances[tx.id] = currentRunning[accId];
+    });
+
+    return runningBalances;
+  }, [transactions, accounts]);
+
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
   
   const today = new Date().toISOString().split('T')[0];
@@ -143,21 +181,33 @@ export default function Dashboard() {
       <div className="px-5">
         <h2 className="text-lg font-bold mb-3">Recent Transactions</h2>
         <div className="space-y-2">
-          {transactions.slice(0, 5).map(t => (
-            <div key={t.id} className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${t.type === 'income' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600' : 'bg-red-50 dark:bg-red-900/30 text-red-600'}`}>
-                {t.type === 'income' ? <ArrowDown size={20} /> : <ArrowUp size={20} />}
+          {transactions.slice(0, 5).map(t => {
+            const netBal = transactionNetBalances[t.id] ?? 0;
+            return (
+              <div 
+                key={t.id} 
+                onClick={() => setSelectedTransaction(t)}
+                className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4 cursor-pointer hover:border-emerald-500/30 dark:hover:border-slate-600 transition-all hover:shadow active:scale-[99.5%] active:bg-slate-50/50 dark:active:bg-slate-800/80"
+              >
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${t.type === 'income' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600' : 'bg-red-50 dark:bg-red-900/30 text-red-600'}`}>
+                  {t.type === 'income' ? <ArrowDown size={20} /> : <ArrowUp size={20} />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-slate-900 dark:text-slate-100 truncate">{t.description}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">{new Date(t.date).toLocaleDateString()}</div>
+                </div>
+                <div className="flex flex-col items-end gap-1 flex-shrink-0 ml-2">
+                  <div className={`font-bold ${t.type === 'income' ? 'text-emerald-600' : 'text-red-600'}`}>
+                    {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
+                  </div>
+                  <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                    Bal: {formatCurrency(netBal)}
+                  </div>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-slate-900 dark:text-slate-100 truncate">{t.description}</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">{new Date(t.date).toLocaleDateString()}</div>
-              </div>
-              <div className={`font-bold ${t.type === 'income' ? 'text-emerald-600' : 'text-red-600'}`}>
-                {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
-              </div>
-            </div>
-          ))}
-          {transactions.length === 0 && (
+            );
+          })}
+          {transactions.slice(0, 5).length === 0 && (
             <div className="text-center py-5 text-slate-500 dark:text-slate-400">No transactions yet.</div>
           )}
         </div>
@@ -175,6 +225,16 @@ export default function Dashboard() {
       <TransferModal 
         isOpen={isTransferOpen} 
         onClose={() => setIsTransferOpen(false)} 
+      />
+
+      <TransactionDetailsModal
+        isOpen={!!selectedTransaction}
+        onClose={() => setSelectedTransaction(null)}
+        transaction={selectedTransaction}
+        netBalance={selectedTransaction ? (transactionNetBalances[selectedTransaction.id] ?? 0) : 0}
+        currency={currency}
+        accounts={accounts}
+        goals={goals}
       />
     </div>
   );

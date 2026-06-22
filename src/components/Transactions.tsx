@@ -5,6 +5,7 @@ import { useStore } from '../store';
 import AddTransactionModal from './AddTransactionModal';
 import EditTransactionModal from './EditTransactionModal';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
+import TransactionDetailsModal from './TransactionDetailsModal';
 import { Transaction } from '../types';
 
 type SortOption = 'date_desc' | 'date_asc' | 'amount_desc' | 'amount_asc';
@@ -36,7 +37,7 @@ const getPeriodKey = (dateString: string, groupBy: TimeGroup) => {
 };
 
 export default function Transactions() {
-  const { transactions, currency, deleteTransaction, accounts } = useStore();
+  const { transactions, currency, deleteTransaction, accounts, goals } = useStore();
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
   const [sortBy, setSortBy] = useState<SortOption>('date_desc');
@@ -45,6 +46,45 @@ export default function Transactions() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deletingTransactionId, setDeletingTransactionId] = useState<number | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+
+  const transactionNetBalances = useMemo(() => {
+    // Sort all transactions chronologically (oldest to newest) to compute historical running balance correctly
+    const sortedAll = [...transactions].sort((a, b) => {
+      const timeA = new Date(a.date).getTime();
+      const timeB = new Date(b.date).getTime();
+      if (timeA !== timeB) return timeA - timeB;
+      return a.id - b.id; // tie breaker
+    });
+
+    // Group sum of txs per account
+    const txSums: Record<string, number> = {};
+    sortedAll.forEach(tx => {
+      const accId = tx.account || 'default';
+      txSums[accId] = (txSums[accId] || 0) + (tx.type === 'income' ? tx.amount : -tx.amount);
+    });
+
+    // Calculate initial balance for each account using our robust balance-reversal forumla
+    const initialBalances: Record<string, number> = {};
+    accounts.forEach(acc => {
+      initialBalances[acc.id] = acc.balance - (txSums[acc.id] || 0);
+    });
+
+    // Calculate running balance incrementally
+    const runningBalances: Record<string, number> = {};
+    const currentRunning: Record<string, number> = { ...initialBalances };
+
+    sortedAll.forEach(tx => {
+      const accId = tx.account || 'default';
+      if (currentRunning[accId] === undefined) {
+        currentRunning[accId] = 0;
+      }
+      currentRunning[accId] += tx.type === 'income' ? tx.amount : -tx.amount;
+      runningBalances[tx.id] = currentRunning[accId];
+    });
+
+    return runningBalances;
+  }, [transactions, accounts]);
 
   const formatCurrency = (amount: number) => {
     return formatMoney(amount, currency);
@@ -95,8 +135,13 @@ export default function Transactions() {
 
   const renderTransactionCard = (t: Transaction, showAccount: boolean = false) => {
     const isIncome = t.type === 'income';
+    const netBal = transactionNetBalances[t.id] ?? 0;
     return (
-      <div key={t.id} className="bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col gap-1.5 group">
+      <div 
+        key={t.id} 
+        onClick={() => setSelectedTransaction(t)}
+        className="bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col gap-1.5 group cursor-pointer hover:border-emerald-500/30 dark:hover:border-slate-600 transition-all hover:shadow active:scale-[99.5%] active:bg-slate-50/50 dark:active:bg-slate-800/80"
+      >
         <div className="flex items-center gap-2.5">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isIncome ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600' : 'bg-red-50 dark:bg-red-900/30 text-red-600'}`}>
             {isIncome ? <ArrowDown size={18} /> : <ArrowUp size={18} />}
@@ -135,16 +180,20 @@ export default function Transactions() {
             <div className={`font-bold text-sm whitespace-nowrap ${isIncome ? 'text-emerald-600' : 'text-red-600'}`}>
               {isIncome ? '+' : '-'}{formatCurrency(t.amount)}
             </div>
+            {/* Net/Running Balance badge under the amount */}
+            <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">
+              Bal: {formatCurrency(netBal)}
+            </div>
             <div className="flex gap-1">
               <button 
-                onClick={() => setEditingTransaction(t)}
+                onClick={(e) => { e.stopPropagation(); setEditingTransaction(t); }}
                 className="text-slate-400 hover:text-blue-500 transition-colors p-1 rounded-md hover:bg-blue-50 dark:bg-blue-900/30"
                 aria-label="Edit transaction"
               >
                 <Edit2 size={14} />
               </button>
               <button 
-                onClick={() => handleDelete(t.id)}
+                onClick={(e) => { e.stopPropagation(); handleDelete(t.id); }}
                 className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50 dark:bg-red-900/30"
                 aria-label="Delete transaction"
               >
@@ -352,6 +401,16 @@ export default function Transactions() {
         isOpen={deletingTransactionId !== null}
         onClose={() => setDeletingTransactionId(null)}
         onConfirm={confirmDelete}
+      />
+
+      <TransactionDetailsModal
+        isOpen={!!selectedTransaction}
+        onClose={() => setSelectedTransaction(null)}
+        transaction={selectedTransaction}
+        netBalance={selectedTransaction ? (transactionNetBalances[selectedTransaction.id] ?? 0) : 0}
+        currency={currency}
+        accounts={accounts}
+        goals={goals}
       />
     </div>
   );
