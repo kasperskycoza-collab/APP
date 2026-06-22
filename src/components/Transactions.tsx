@@ -411,6 +411,8 @@ export default function Transactions() {
         currency={currency}
         accounts={accounts}
         goals={goals}
+        onEdit={(tx) => { setSelectedTransaction(null); setEditingTransaction(tx); }}
+        onDelete={(id) => { setSelectedTransaction(null); handleDelete(id); }}
       />
     </div>
   );

@@ -6,14 +6,16 @@ import AddGoalModal from './AddGoalModal';
 import EditGoalModal from './EditGoalModal';
 import FundGoalModal from './FundGoalModal';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
+import GoalDetailsModal from './GoalDetailsModal';
 import { Goal } from '../types';
 
 export default function Goals() {
-  const { goals, currency, deleteGoal } = useStore();
+  const { goals, currency, deleteGoal, transactions } = useStore();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [fundingGoal, setFundingGoal] = useState<Goal | null>(null);
   const [deletingGoalId, setDeletingGoalId] = useState<number | null>(null);
+  const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
 
   const formatCurrency = (amount: number) => {
     return formatMoney(amount, currency);
@@ -51,7 +53,8 @@ export default function Goals() {
           return (
             <div 
               key={goal.id} 
-              className={`bg-white dark:bg-slate-800 p-5 rounded-xl border shadow-sm flex flex-col gap-3 group transition-all duration-300 ${
+              onClick={() => setSelectedGoal(goal)}
+              className={`bg-white dark:bg-slate-800 p-5 rounded-xl border shadow-sm flex flex-col gap-3 group transition-all duration-300 cursor-pointer hover:border-emerald-500/30 dark:hover:border-slate-600 hover:shadow active:scale-[99.5%] ${
                 isCompleted 
                   ? 'border-orange-300 dark:border-orange-500/30 ring-1 ring-orange-500/10 shadow-[0_4px_12px_rgba(249,115,22,0.06)] bg-orange-50/10' 
                   : 'border-slate-200 dark:border-slate-700'
@@ -101,21 +104,21 @@ export default function Goals() {
               
               <div className="flex gap-2 justify-end pt-3 border-t border-slate-100 dark:border-slate-800 dark:border-slate-800">
                 <button
-                  onClick={() => setFundingGoal(goal)}
+                  onClick={(e) => { e.stopPropagation(); setFundingGoal(goal); }}
                   className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-sm font-semibold transition-colors"
                 >
                   <PlusCircle size={16} /> Fund
                 </button>
                 <div className="flex-1"></div>
                 <button
-                  onClick={() => setEditingGoal(goal)}
+                  onClick={(e) => { e.stopPropagation(); setEditingGoal(goal); }}
                   className="text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:bg-blue-900/30 dark:bg-blue-900/30 p-1.5 rounded-lg transition-colors"
                   aria-label="Edit goal"
                 >
                   <Edit2 size={16} />
                 </button>
                 <button
-                  onClick={() => handleDelete(goal.id)}
+                  onClick={(e) => { e.stopPropagation(); handleDelete(goal.id); }}
                   className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:bg-red-900/30 p-1.5 rounded-lg transition-colors"
                   aria-label="Delete goal"
                 >
@@ -149,6 +152,17 @@ export default function Goals() {
         isOpen={!!fundingGoal}
         onClose={() => setFundingGoal(null)}
         goal={fundingGoal}
+      />
+
+      <GoalDetailsModal
+        isOpen={!!selectedGoal}
+        onClose={() => setSelectedGoal(null)}
+        goal={selectedGoal}
+        currency={currency}
+        transactions={transactions}
+        onFund={(g) => { setSelectedGoal(null); setFundingGoal(g); }}
+        onEdit={(g) => { setSelectedGoal(null); setEditingGoal(g); }}
+        onDelete={(id) => { setSelectedGoal(null); handleDelete(id); }}
       />
 
       <ConfirmDeleteModal

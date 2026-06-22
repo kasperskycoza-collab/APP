@@ -1,4 +1,4 @@
-import { X, Calendar, Wallet, Tag, Target, RefreshCw, CreditCard, ArrowDown, ArrowUp } from 'lucide-react';
+import { X, Calendar, Wallet, Tag, Target, RefreshCw, CreditCard, ArrowDown, ArrowUp, Edit2, Trash2 } from 'lucide-react';
 import { Transaction, Account, Goal } from '../types';
 import { formatCurrency as formatMoney } from '../utils';
 
@@ -10,6 +10,8 @@ interface TransactionDetailsModalProps {
   currency: string;
   accounts: Account[];
   goals: Goal[];
+  onEdit?: (transaction: Transaction) => void;
+  onDelete?: (id: number) => void;
 }
 
 export default function TransactionDetailsModal({
@@ -19,7 +21,9 @@ export default function TransactionDetailsModal({
   netBalance,
   currency,
   accounts,
-  goals
+  goals,
+  onEdit,
+  onDelete
 }: TransactionDetailsModalProps) {
   if (!isOpen || !transaction) return null;
 
@@ -153,12 +157,32 @@ export default function TransactionDetailsModal({
         </div>
 
         {/* Footer actions */}
-        <div className="p-5 border-t border-slate-100 dark:border-slate-700/50 flex-shrink-0 bg-slate-50 dark:bg-slate-900/20 flex gap-3 rounded-b-3xl sm:rounded-b-2xl">
+        <div className="p-4 border-t border-slate-100 dark:border-slate-700/50 flex-shrink-0 bg-slate-50 dark:bg-slate-900/20 flex items-center gap-3 rounded-b-3xl sm:rounded-b-2xl">
+          {onEdit && (
+            <button 
+              onClick={() => onEdit(transaction)}
+              className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+            >
+              <Edit2 size={16} /> Edit
+            </button>
+          )}
+
+          {onDelete && (
+            <button 
+              onClick={() => onDelete(transaction.id)}
+              className="p-3 bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-xl transition-colors border border-rose-100 dark:border-rose-950/20"
+              aria-label="Delete transaction"
+              title="Delete Transaction"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
+          
           <button 
             onClick={onClose} 
-            className="flex-1 py-3 text-center bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 font-bold text-slate-700 dark:text-slate-200 rounded-xl transition duration-150"
+            className="py-3 px-5 text-center bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200 rounded-xl transition duration-150"
           >
-            Close Details
+            Close
           </button>
         </div>
       </div>

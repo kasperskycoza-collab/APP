@@ -6,17 +6,32 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Cartes
 import AddTransactionModal from './AddTransactionModal';
 import AddGoalModal from './AddGoalModal';
 import TransferModal from './TransferModal';
+import EditTransactionModal from './EditTransactionModal';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 import TransactionDetailsModal from './TransactionDetailsModal';
 import { Transaction } from '../types';
 
 export default function Dashboard() {
-  const { accounts, transactions, goals, currency } = useStore();
+  const { accounts, transactions, goals, currency, deleteTransaction } = useStore();
   
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
   const [isAddGoalOpen, setIsAddGoalOpen] = useState(false);
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [deletingTransactionId, setDeletingTransactionId] = useState<number | null>(null);
+
+  const handleDelete = (id: number) => {
+    setDeletingTransactionId(id);
+  };
+
+  const confirmDelete = () => {
+    if (deletingTransactionId !== null) {
+      deleteTransaction(deletingTransactionId);
+      setDeletingTransactionId(null);
+    }
+  };
 
   const transactionNetBalances = useMemo(() => {
     // Sort all transactions chronologically (oldest to newest) to compute historical running balance correctly
@@ -227,6 +242,18 @@ export default function Dashboard() {
         onClose={() => setIsTransferOpen(false)} 
       />
 
+      <EditTransactionModal
+        isOpen={!!editingTransaction}
+        onClose={() => setEditingTransaction(null)}
+        transaction={editingTransaction}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={deletingTransactionId !== null}
+        onClose={() => setDeletingTransactionId(null)}
+        onConfirm={confirmDelete}
+      />
+
       <TransactionDetailsModal
         isOpen={!!selectedTransaction}
         onClose={() => setSelectedTransaction(null)}
@@ -235,6 +262,8 @@ export default function Dashboard() {
         currency={currency}
         accounts={accounts}
         goals={goals}
+        onEdit={(tx) => { setSelectedTransaction(null); setEditingTransaction(tx); }}
+        onDelete={(id) => { setSelectedTransaction(null); handleDelete(id); }}
       />
     </div>
   );
