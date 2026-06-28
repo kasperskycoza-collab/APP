@@ -57,7 +57,9 @@ export default function Goals() {
       </div>
 
       <div className="p-5 space-y-4">
-        {goals.map(goal => {
+        {[...goals]
+          .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
+          .map(goal => {
           const percentage = Math.min((goal.current / goal.target) * 100, 100);
           const isCompleted = goal.current >= goal.target;
           return (
