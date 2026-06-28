@@ -1,6 +1,8 @@
-import { X, Calendar, Edit2, Trash2, PlusCircle, Target, TrendingUp, AlertCircle, Sparkles, CheckCircle2, Wallet } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Calendar, Edit2, Trash2, PlusCircle, Target, TrendingUp, AlertCircle, Sparkles, CheckCircle2, Wallet, Trophy } from 'lucide-react';
 import { Goal, Transaction, Account } from '../types';
 import { formatCurrency as formatMoney } from '../utils';
+import { useStore } from '../store';
 
 interface GoalDetailsModalProps {
   isOpen: boolean;
@@ -12,6 +14,8 @@ interface GoalDetailsModalProps {
   onFund: (goal: Goal) => void;
   onEdit: (goal: Goal) => void;
   onDelete: (id: number) => void;
+  onEditTransaction: (tx: Transaction) => void;
+  onDeleteTransaction: (id: number) => void;
 }
 
 export default function GoalDetailsModal({
@@ -23,13 +27,30 @@ export default function GoalDetailsModal({
   accounts,
   onFund,
   onEdit,
-  onDelete
+  onDelete,
+  onEditTransaction,
+  onDeleteTransaction
 }: GoalDetailsModalProps) {
+  const [isAllocating, setIsAllocating] = useState(false);
+  const [allocateAccountId, setAllocateAccountId] = useState(accounts[0]?.id || 'default');
+  const [allocateAmount, setAllocateAmount] = useState(goal ? goal.current : 0);
+  const [allocateError, setAllocateError] = useState('');
+
+  const formatCurrency = (amount: number) => formatMoney(amount, currency, 0);
+
+  useEffect(() => {
+    if (goal) {
+      setAllocateAmount(goal.current);
+      setAllocateAccountId(accounts[0]?.id || 'default');
+      setIsAllocating(false);
+      setAllocateError('');
+    }
+  }, [goal, accounts]);
+
   if (!isOpen || !goal) return null;
 
   const percentage = Math.min((goal.current / goal.target) * 100, 100);
   const isCompleted = goal.current >= goal.target;
-  const formatCurrency = (amount: number) => formatMoney(amount, currency, 0);
 
   const getFontSizeClass = (formattedStr: string) => {
     const len = formattedStr.length;
@@ -37,6 +58,33 @@ export default function GoalDetailsModal({
     if (len > 9) return "text-[10px] xs:text-xs sm:text-xs";
     if (len > 7) return "text-xs sm:text-sm";
     return "text-sm sm:text-sm";
+  };
+
+  const handleAllocate = () => {
+    setAllocateError('');
+    if (allocateAmount <= 0) {
+      setAllocateError('Amount must be greater than zero');
+      return;
+    }
+    if (allocateAmount > goal.current) {
+      setAllocateError(`Cannot allocate more than current savings (${formatCurrency(goal.current)})`);
+      return;
+    }
+
+    const store = useStore.getState();
+    store.addTransaction({
+      type: 'income',
+      amount: allocateAmount,
+      category: 'savings',
+      date: new Date().toISOString(),
+      description: `Goal Allocation: ${goal.name}`,
+      method: 'transfer',
+      account: allocateAccountId,
+      recurring: false,
+      goalId: goal.id
+    });
+
+    setIsAllocating(false);
   };
 
   // Filter transactions related to this goal
@@ -151,6 +199,78 @@ export default function GoalDetailsModal({
             </div>
           </div>
 
+          {isCompleted && (
+            <div className="bg-amber-500/10 dark:bg-amber-500/5 border border-amber-500/20 rounded-2xl p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl mt-0.5">
+                  <Trophy size={20} />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-extrabold text-sm text-slate-800 dark:text-slate-200">Allocate Saved Funds</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                    This savings goal is achieved! You can allocate all or part of these saved funds to any cash book of choice as income.
+                  </p>
+                </div>
+              </div>
+
+              {!isAllocating ? (
+                <button
+                  onClick={() => setIsAllocating(true)}
+                  className="w-full py-2.5 px-4 bg-amber-500 hover:bg-amber-600 active:scale-[98%] text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                >
+                  <Sparkles size={14} /> Allocate Funds Now
+                </button>
+              ) : (
+                <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-amber-500/20 space-y-3 animate-in slide-in-from-top-2 duration-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-1">To Cash Book</label>
+                      <select
+                        value={allocateAccountId}
+                        onChange={(e) => setAllocateAccountId(e.target.value)}
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-xs bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-amber-500"
+                      >
+                        {accounts.map(acc => (
+                          <option key={acc.id} value={acc.id}>{acc.name} ({formatCurrency(acc.balance)})</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-1">Amount</label>
+                      <input
+                        type="number"
+                        max={goal.current}
+                        min={1}
+                        value={allocateAmount}
+                        onChange={(e) => setAllocateAmount(parseFloat(e.target.value) || 0)}
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-xs bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+                  </div>
+
+                  {allocateError && (
+                    <p className="text-[11px] font-semibold text-rose-500">{allocateError}</p>
+                  )}
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setIsAllocating(false)}
+                      className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 font-extrabold text-xs rounded-lg transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleAllocate}
+                      className="flex-1 py-2 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-lg transition-all shadow-sm flex items-center justify-center gap-1"
+                    >
+                      Confirm Allocation
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Amount breakdown grids */}
           <div className="grid grid-cols-3 gap-2 sm:gap-3">
             <div className="p-2 sm:p-3 border border-slate-100 dark:border-slate-800 bg-emerald-50/10 rounded-xl space-y-0.5 text-center min-w-0">
@@ -200,8 +320,8 @@ export default function GoalDetailsModal({
               {relatedTransactions.map(tx => {
                 const account = accounts.find(a => a.id === tx.account);
                 return (
-                  <div key={tx.id} className="p-3 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-100 dark:border-slate-800/60 flex justify-between items-center text-xs">
-                    <div className="min-w-0 pr-2">
+                  <div key={tx.id} className="p-3 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-100 dark:border-slate-800/60 flex justify-between items-center text-xs group transition-all duration-200">
+                    <div className="min-w-0 pr-2 flex-1">
                       <p className="font-semibold text-slate-700 dark:text-slate-200 truncate">{tx.description || 'Goal Funding Record'}</p>
                       <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400">
                         <span>{new Date(tx.date).toLocaleDateString()}</span>
@@ -215,9 +335,33 @@ export default function GoalDetailsModal({
                         )}
                       </div>
                     </div>
-                    <span className="font-extrabold text-emerald-600 dark:text-emerald-400 flex-shrink-0">
-                      +{formatCurrency(tx.amount)}
-                    </span>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`font-extrabold flex-shrink-0 ${tx.type === 'income' ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                        {tx.type === 'income' ? '-' : '+'}{formatCurrency(tx.amount)}
+                      </span>
+                      <div className="flex items-center gap-0.5 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditTransaction(tx);
+                          }}
+                          className="p-1 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded transition-colors"
+                          title="Edit Transaction"
+                        >
+                          <Edit2 size={12} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteTransaction(tx.id);
+                          }}
+                          className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded transition-colors"
+                          title="Delete Transaction"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 );
               })}

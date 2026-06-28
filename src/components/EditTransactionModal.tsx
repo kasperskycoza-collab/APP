@@ -27,7 +27,7 @@ export default function EditTransactionModal({ isOpen, onClose, transaction }: E
 
   useEffect(() => {
     if (transaction && isOpen) {
-      setType(transaction.type);
+      setType(transaction.goalId ? 'expense' : transaction.type);
       setAmount(transaction.amount.toString());
       setCategory(transaction.category);
       setDate(transaction.date);
@@ -53,7 +53,7 @@ export default function EditTransactionModal({ isOpen, onClose, transaction }: E
       setError('Please enter a valid amount');
       return;
     }
-    if (!category) {
+    if (!transaction.goalId && !category) {
       setError('Please select a category');
       return;
     }
@@ -91,22 +91,24 @@ export default function EditTransactionModal({ isOpen, onClose, transaction }: E
           <form id="edit-transaction-form" onSubmit={handleSubmit} className="space-y-4">
             {error && <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 rounded-lg text-sm">{error}</div>}
 
-            <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
-              <button
-                type="button"
-                onClick={() => { setType('income'); setCategory(''); }}
-                className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${type === 'income' ? 'bg-white dark:bg-slate-800 text-emerald-600 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
-              >
-                Income
-              </button>
-              <button
-                type="button"
-                onClick={() => { setType('expense'); setCategory(''); }}
-                className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${type === 'expense' ? 'bg-white dark:bg-slate-800 text-red-600 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
-              >
-                Expense
-              </button>
-            </div>
+            {!transaction.goalId && (
+              <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+                <button
+                  type="button"
+                  onClick={() => { setType('income'); setCategory(''); }}
+                  className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${type === 'income' ? 'bg-white dark:bg-slate-800 text-emerald-600 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+                >
+                  Income
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setType('expense'); setCategory(''); }}
+                  className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${type === 'expense' ? 'bg-white dark:bg-slate-800 text-red-600 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+                >
+                  Expense
+                </button>
+              </div>
+            )}
 
             <div>
               <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">Amount</label>
@@ -123,24 +125,26 @@ export default function EditTransactionModal({ isOpen, onClose, transaction }: E
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">Category</label>
-              <div className="grid grid-cols-3 gap-2">
-                {categories.map((cat) => (
-                  <div
-                    key={cat}
-                    onClick={() => setCategory(cat)}
-                    className={`border-2 p-2 rounded-xl text-center cursor-pointer text-xs font-semibold capitalize transition-all ${
-                      category === cat
-                        ? type === 'income' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700' : 'border-red-500 bg-red-50 dark:bg-red-900/30 text-red-700'
-                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:border-emerald-200 hover:bg-slate-50 dark:bg-slate-900'
-                    }`}
-                  >
-                    {cat}
-                  </div>
-                ))}
+            {!transaction.goalId && (
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">Category</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {categories.map((cat) => (
+                    <div
+                      key={cat}
+                      onClick={() => setCategory(cat)}
+                      className={`border-2 p-2 rounded-xl text-center cursor-pointer text-xs font-semibold capitalize transition-all ${
+                        category === cat
+                          ? type === 'income' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700' : 'border-red-500 bg-red-50 dark:bg-red-900/30 text-red-700'
+                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:border-emerald-200 hover:bg-slate-50 dark:bg-slate-900'
+                      }`}
+                    >
+                      {cat}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div>
               <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">Description</label>
@@ -149,7 +153,12 @@ export default function EditTransactionModal({ isOpen, onClose, transaction }: E
                 placeholder="What was this for?"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:border-emerald-500 focus:outline-none transition-colors"
+                readOnly={!!transaction.goalId}
+                className={`w-full border-2 rounded-xl p-3 focus:outline-none transition-colors ${
+                  transaction.goalId
+                    ? "border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 cursor-not-allowed"
+                    : "border-slate-200 dark:border-slate-700 focus:border-emerald-500 text-slate-800 dark:text-slate-100"
+                }`}
               />
             </div>
 
@@ -192,30 +201,32 @@ export default function EditTransactionModal({ isOpen, onClose, transaction }: E
               </select>
             </div>
 
-            <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-              <input
-                type="checkbox"
-                id="recurring-edit"
-                checked={recurring}
-                onChange={(e) => setRecurring(e.target.checked)}
-                className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-              />
-              <div className="flex-1">
-                <label htmlFor="recurring-edit" className="text-sm font-semibold text-slate-700 dark:text-slate-300">Make this recurring</label>
-                {recurring && (
-                  <select
-                    value={frequency}
-                    onChange={(e) => setFrequency(e.target.value)}
-                    className="mt-2 w-full border border-slate-200 dark:border-slate-700 rounded-lg p-2 focus:border-emerald-500 focus:outline-none text-sm bg-white dark:bg-slate-800"
-                  >
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="yearly">Yearly</option>
-                  </select>
-                )}
+            {!transaction.goalId && (
+              <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                <input
+                  type="checkbox"
+                  id="recurring-edit"
+                  checked={recurring}
+                  onChange={(e) => setRecurring(e.target.checked)}
+                  className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                />
+                <div className="flex-1">
+                  <label htmlFor="recurring-edit" className="text-sm font-semibold text-slate-700 dark:text-slate-300">Make this recurring</label>
+                  {recurring && (
+                    <select
+                      value={frequency}
+                      onChange={(e) => setFrequency(e.target.value)}
+                      className="mt-2 w-full border border-slate-200 dark:border-slate-700 rounded-lg p-2 focus:border-emerald-500 focus:outline-none text-sm bg-white dark:bg-slate-800"
+                    >
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="yearly">Yearly</option>
+                    </select>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="pt-4 pb-2">
               <button

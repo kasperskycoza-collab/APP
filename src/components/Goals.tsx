@@ -7,15 +7,18 @@ import EditGoalModal from './EditGoalModal';
 import FundGoalModal from './FundGoalModal';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 import GoalDetailsModal from './GoalDetailsModal';
-import { Goal } from '../types';
+import EditTransactionModal from './EditTransactionModal';
+import { Goal, Transaction } from '../types';
 
 export default function Goals() {
-  const { goals, currency, deleteGoal, transactions, accounts } = useStore();
+  const { goals, currency, deleteGoal, transactions, accounts, deleteTransaction } = useStore();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [fundingGoal, setFundingGoal] = useState<Goal | null>(null);
   const [deletingGoalId, setDeletingGoalId] = useState<number | null>(null);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [deletingTransactionId, setDeletingTransactionId] = useState<number | null>(null);
 
   const formatCurrency = (amount: number) => {
     return formatMoney(amount, currency, 0);
@@ -29,6 +32,13 @@ export default function Goals() {
     if (deletingGoalId !== null) {
       deleteGoal(deletingGoalId);
       setDeletingGoalId(null);
+    }
+  };
+
+  const confirmDeleteTransaction = () => {
+    if (deletingTransactionId !== null) {
+      deleteTransaction(deletingTransactionId);
+      setDeletingTransactionId(null);
     }
   };
 
@@ -160,13 +170,15 @@ export default function Goals() {
       <GoalDetailsModal
         isOpen={!!selectedGoal}
         onClose={() => setSelectedGoal(null)}
-        goal={selectedGoal}
+        goal={selectedGoal ? goals.find(g => g.id === selectedGoal.id) || null : null}
         currency={currency}
         transactions={transactions}
         accounts={accounts}
         onFund={(g) => { setSelectedGoal(null); setFundingGoal(g); }}
         onEdit={(g) => { setSelectedGoal(null); setEditingGoal(g); }}
         onDelete={(id) => { setSelectedGoal(null); handleDelete(id); }}
+        onEditTransaction={(tx) => setEditingTransaction(tx)}
+        onDeleteTransaction={(id) => setDeletingTransactionId(id)}
       />
 
       <ConfirmDeleteModal
@@ -175,6 +187,20 @@ export default function Goals() {
         onConfirm={confirmDelete}
         title="Delete Savings Goal"
         message="Are you sure you want to delete this savings goal? This will not affect your transactions."
+      />
+
+      <EditTransactionModal
+        isOpen={!!editingTransaction}
+        onClose={() => setEditingTransaction(null)}
+        transaction={editingTransaction}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={deletingTransactionId !== null}
+        onClose={() => setDeletingTransactionId(null)}
+        onConfirm={confirmDeleteTransaction}
+        title="Delete Transaction"
+        message="Are you sure you want to delete this transaction? This action cannot be undone and will update both this goal's savings progress and your Cash Book balance."
       />
     </div>
   );
