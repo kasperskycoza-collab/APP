@@ -61,7 +61,7 @@ export const useStore = create<StoreState>()(
             );
         }
         return {
-          transactions: [{ id: Date.now(), ...tx }, ...state.transactions],
+          transactions: [{ id: Date.now() + Math.floor(Math.random() * 1000000), ...tx }, ...state.transactions],
           accounts: newAccounts,
           goals: newGoals
         };
@@ -75,21 +75,43 @@ export const useStore = create<StoreState>()(
         const tx = state.transactions.find(t => t.id === id);
         if (!tx) return state;
 
-        const amount = tx.type === 'income' ? -tx.amount : tx.amount; // reverse the effect
-        const newAccounts = state.accounts.map(acc => 
-          acc.id === tx.account ? { ...acc, balance: acc.balance + amount } : acc
-        );
+        let newAccounts = [...state.accounts];
+        let newGoals = [...state.goals];
+        let transactionsToRemoveIds = [id];
 
-        let newGoals = state.goals;
-        if (tx.goalId) {
+        if (tx.transferGroupId) {
+          const relatedTxs = state.transactions.filter(t => t.transferGroupId === tx.transferGroupId);
+          transactionsToRemoveIds = relatedTxs.map(t => t.id);
+
+          relatedTxs.forEach(rtx => {
+            const amount = rtx.type === 'income' ? -rtx.amount : rtx.amount;
+            newAccounts = newAccounts.map(acc => 
+              acc.id === rtx.account ? { ...acc, balance: acc.balance + amount } : acc
+            );
+
+            if (rtx.goalId) {
+              const goalRevertEffect = rtx.type === 'expense' ? -rtx.amount : rtx.amount;
+              newGoals = newGoals.map(g => 
+                g.id === rtx.goalId ? { ...g, current: g.current + goalRevertEffect } : g
+              );
+            }
+          });
+        } else {
+          const amount = tx.type === 'income' ? -tx.amount : tx.amount;
+          newAccounts = state.accounts.map(acc => 
+            acc.id === tx.account ? { ...acc, balance: acc.balance + amount } : acc
+          );
+
+          if (tx.goalId) {
             const goalRevertEffect = tx.type === 'expense' ? -tx.amount : tx.amount;
             newGoals = state.goals.map(g => 
-               g.id === tx.goalId ? { ...g, current: g.current + goalRevertEffect } : g
+              g.id === tx.goalId ? { ...g, current: g.current + goalRevertEffect } : g
             );
+          }
         }
 
         return {
-          transactions: state.transactions.filter(t => t.id !== id),
+          transactions: state.transactions.filter(t => !transactionsToRemoveIds.includes(t.id)),
           accounts: newAccounts,
           goals: newGoals
         };
@@ -98,6 +120,96 @@ export const useStore = create<StoreState>()(
       editTransaction: (id: number, updatedTx: Partial<Omit<Transaction, 'id'>>) => set((state) => {
         const oldTx = state.transactions.find(t => t.id === id);
         if (!oldTx) return state;
+
+        if (oldTx.transferGroupId) {
+          const partnerTx = state.transactions.find(t => t.transferGroupId === oldTx.transferGroupId && t.id !== oldTx.id);
+
+          if (partnerTx) {
+            let tempAccounts = state.accounts.map(acc => ({ ...acc }));
+            
+            const oldTxRevert = oldTx.type === 'income' ? -oldTx.amount : oldTx.amount;
+            tempAccounts = tempAccounts.map(acc => 
+              acc.id === oldTx.account ? { ...acc, balance: acc.balance + oldTxRevert } : acc
+            );
+
+            const partnerTxRevert = partnerTx.type === 'income' ? -partnerTx.amount : partnerTx.amount;
+            tempAccounts = tempAccounts.map(acc => 
+              acc.id === partnerTx.account ? { ...acc, balance: acc.balance + partnerTxRevert } : acc
+            );
+
+            const newAmount = updatedTx.amount !== undefined ? updatedTx.amount : oldTx.amount;
+            const newDate = updatedTx.date !== undefined ? updatedTx.date : oldTx.date;
+            const newMethod = updatedTx.method !== undefined ? updatedTx.method : oldTx.method;
+            const newRecurring = updatedTx.recurring !== undefined ? updatedTx.recurring : oldTx.recurring;
+            const newFrequency = updatedTx.frequency !== undefined ? updatedTx.frequency : oldTx.frequency;
+            
+            const newAccountTx1 = updatedTx.account !== undefined ? updatedTx.account : oldTx.account;
+            const newAccountTx2 = partnerTx.account;
+
+            const newCategory = updatedTx.category !== undefined ? updatedTx.category : oldTx.category;
+
+            const updatedDescription = updatedTx.description !== undefined ? updatedTx.description : oldTx.description;
+            const colonIndex = updatedDescription.indexOf(': ');
+            const customDesc = colonIndex !== -1 ? updatedDescription.substring(colonIndex + 2) : updatedDescription;
+
+            const fromAccName = oldTx.type === 'expense'
+              ? (tempAccounts.find(a => a.id === newAccountTx1)?.name || 'Account')
+              : (tempAccounts.find(a => a.id === newAccountTx2)?.name || 'Account');
+
+            const toAccName = oldTx.type === 'expense'
+              ? (tempAccounts.find(a => a.id === newAccountTx2)?.name || 'Account')
+              : (tempAccounts.find(a => a.id === newAccountTx1)?.name || 'Account');
+
+            const fromDescription = `Transfer to ${toAccName}: ${customDesc}`;
+            const toDescription = `Transfer from ${fromAccName}: ${customDesc}`;
+
+            const newDescriptionTx1 = oldTx.type === 'expense' ? fromDescription : toDescription;
+            const newDescriptionTx2 = partnerTx.type === 'expense' ? fromDescription : toDescription;
+
+            const tx1Apply = oldTx.type === 'income' ? newAmount : -newAmount;
+            tempAccounts = tempAccounts.map(acc => 
+              acc.id === newAccountTx1 ? { ...acc, balance: acc.balance + tx1Apply } : acc
+            );
+
+            const tx2Apply = partnerTx.type === 'income' ? newAmount : -newAmount;
+            tempAccounts = tempAccounts.map(acc => 
+              acc.id === newAccountTx2 ? { ...acc, balance: acc.balance + tx2Apply } : acc
+            );
+
+            return {
+              accounts: tempAccounts,
+              transactions: state.transactions.map(t => {
+                if (t.id === oldTx.id) {
+                  return {
+                    ...t,
+                    amount: newAmount,
+                    date: newDate,
+                    method: newMethod,
+                    recurring: newRecurring,
+                    frequency: newRecurring ? newFrequency : undefined,
+                    account: newAccountTx1,
+                    category: newCategory,
+                    description: newDescriptionTx1,
+                  };
+                }
+                if (t.id === partnerTx.id) {
+                  return {
+                    ...t,
+                    amount: newAmount,
+                    date: newDate,
+                    method: newMethod,
+                    recurring: newRecurring,
+                    frequency: newRecurring ? newFrequency : undefined,
+                    account: newAccountTx2,
+                    category: newCategory,
+                    description: newDescriptionTx2,
+                  };
+                }
+                return t;
+              })
+            };
+          }
+        }
 
         // Revert old transaction's effect
         const revertAmount = oldTx.type === 'income' ? -oldTx.amount : oldTx.amount;

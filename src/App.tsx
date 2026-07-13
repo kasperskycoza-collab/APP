@@ -11,7 +11,7 @@ import { LogIn, Key, Mail, Wallet } from 'lucide-react';
 import { auth, provider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, hasFirebaseConfig } from './firebase';
 
 export default function App() {
-  const { isLoggedIn, pinLock, darkMode, login, logout } = useStore();
+  const { isLoggedIn, pinLock, darkMode, login, logout, user } = useStore();
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

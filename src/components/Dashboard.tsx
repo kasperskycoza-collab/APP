@@ -194,7 +194,7 @@ export default function Dashboard() {
       </div>
 
       <div className="px-5">
-        <h2 className="text-lg font-bold mb-3">Recent Transactions</h2>
+        <h2 className="text-lg font-bold mb-3 text-slate-800 dark:text-slate-100">Recent Transactions</h2>
         <div className="space-y-2">
           {transactions.slice(0, 5).map(t => {
             const netBal = transactionNetBalances[t.id] ?? 0;
@@ -223,7 +223,7 @@ export default function Dashboard() {
             );
           })}
           {transactions.slice(0, 5).length === 0 && (
-            <div className="text-center py-5 text-slate-500 dark:text-slate-400">No transactions yet.</div>
+            <div className="text-center py-5 text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">No transactions yet.</div>
           )}
         </div>
       </div>

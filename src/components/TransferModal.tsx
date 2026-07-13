@@ -14,6 +14,7 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
   const [fromAccount, setFromAccount] = useState(accounts[0]?.id || 'default');
   const [toAccount, setToAccount] = useState(accounts.length > 1 ? accounts[1].id : 'default');
   const [amount, setAmount] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
 
@@ -43,7 +44,7 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
     }
 
     const toAcc = accounts.find(a => a.id === toAccount);
-    const date = new Date().toISOString().split('T')[0];
+    const transferGroupId = `transfer-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
 
     // Create expense transaction for outgoing
     addTransaction({
@@ -51,10 +52,11 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
       amount: parsedAmount,
       category: 'transfer',
       date,
-      description: `Transfer to ${toAcc?.name}: ${description}`,
+      description: `Transfer to ${toAcc?.name || 'Account'}: ${description}`,
       method: 'transfer',
       account: fromAccount,
       recurring: false,
+      transferGroupId,
     });
 
     // Create income transaction for incoming
@@ -67,12 +69,14 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
       method: 'transfer',
       account: toAccount,
       recurring: false,
+      transferGroupId,
     });
 
     onClose();
     // Reset form
     setAmount('');
     setDescription('');
+    setDate(new Date().toISOString().split('T')[0]);
   };
 
   return (
@@ -131,6 +135,16 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
                   if (result !== null) setAmount(result.toString());
                 }}
                 className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:border-blue-500 focus:outline-none transition-colors text-lg"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">Date</label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:border-blue-500 focus:outline-none transition-colors text-sm bg-white dark:bg-slate-800"
               />
             </div>
 

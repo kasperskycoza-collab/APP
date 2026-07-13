@@ -12,6 +12,7 @@ export interface Transaction {
   recurring: boolean;
   frequency?: string;
   goalId?: number;
+  transferGroupId?: string;
 }
 
 export interface Goal {
