@@ -15,12 +15,14 @@ export default function FundGoalModal({ isOpen, onClose, goal }: FundGoalModalPr
 
   const [amount, setAmount] = useState('');
   const [accountId, setAccountId] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (goal && isOpen) {
       setAmount('');
       setAccountId('default');
+      setDate(new Date().toISOString().split('T')[0]);
       setError('');
     }
   }, [goal, isOpen]);
@@ -59,7 +61,7 @@ export default function FundGoalModal({ isOpen, onClose, goal }: FundGoalModalPr
        // Just a warning or we could allow it. Let's allow it but we might want to warn or cap it. Let's not restrict it to allow overfunding or just fund exact amount.
     }
 
-    updateGoalStatus(goal.id, parsedAmount, accountId);
+    updateGoalStatus(goal.id, parsedAmount, accountId, date);
     onClose();
   };
 
@@ -122,6 +124,16 @@ export default function FundGoalModal({ isOpen, onClose, goal }: FundGoalModalPr
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">Transaction Date</label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:border-emerald-500 focus:outline-none transition-colors text-sm bg-white dark:bg-slate-800"
+              />
             </div>
 
             <div className="pt-4 pb-2">

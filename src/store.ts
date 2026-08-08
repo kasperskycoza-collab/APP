@@ -12,7 +12,7 @@ interface StoreState extends AppState {
   setCurrency: (currency: string) => void;
   editGoal: (id: number, goal: Partial<Omit<Goal, 'id'>>) => void;
   deleteGoal: (id: number) => void;
-  updateGoalStatus: (id: number, amount: number, accountId?: string) => void;
+  updateGoalStatus: (id: number, amount: number, accountId?: string, date?: string) => void;
   toggleDarkMode: () => void;
   togglePinLock: () => void;
   setPin: (pin: string) => void;
@@ -277,7 +277,7 @@ export const useStore = create<StoreState>()(
         goals: state.goals.map(g => g.id === id ? { ...g, ...updatedGoal } : g)
       })),
 
-      updateGoalStatus: (id, amount, accountId) => {
+      updateGoalStatus: (id, amount, accountId, date) => {
         const goal = get().goals.find(g => g.id === id);
 
         if (accountId && goal) {
@@ -285,7 +285,7 @@ export const useStore = create<StoreState>()(
             type: 'expense',
             amount: amount,
             category: 'savings',
-            date: new Date().toISOString(),
+            date: date || new Date().toISOString().split('T')[0],
             description: `Funded Goal: ${goal.name}`,
             method: 'transfer',
             account: accountId,
