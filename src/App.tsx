@@ -11,7 +11,7 @@ import { LogIn, Key, Mail, Wallet } from 'lucide-react';
 import { auth, provider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, hasFirebaseConfig } from './firebase';
 
 export default function App() {
-  const { isLoggedIn, pinLock, darkMode, login, logout, user } = useStore();
+  const { isLoggedIn, pinLock, darkMode, login, logout, user, toggleDarkMode } = useStore();
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -158,15 +158,166 @@ export default function App() {
     return <PinScreen onSuccess={() => setIsUnlocked(true)} onBack={logout} />;
   }
 
+  const navItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: Wallet },
+    { id: 'transactions', label: 'Cash Book', icon: Key }, // or other Lucide icon
+    { id: 'analysis', label: 'Audit Analytics', icon: LogIn },
+    { id: 'goals', label: 'Savings Goals', icon: Wallet },
+    { id: 'profile', label: 'Profile & Settings', icon: Mail },
+  ];
+
   return (
-    <div className={`min-h-screen font-sans mx-auto max-w-md relative pb-16 shadow-2xl transition-colors duration-300 ${darkMode ? 'dark bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
-      {currentTab === 'dashboard' && <Dashboard />}
-      {currentTab === 'transactions' && <Transactions />}
-      {currentTab === 'analysis' && <Analysis />}
-      {currentTab === 'goals' && <Goals />}
-      {currentTab === 'profile' && <Profile />}
+    <div className={`min-h-screen font-sans transition-colors duration-300 ${darkMode ? 'dark bg-slate-900 text-slate-100' : 'bg-slate-100 text-slate-900'}`}>
       
-      <BottomNav currentTab={currentTab} setCurrentTab={setCurrentTab} />
+      {/* PC / Desktop Navigation Sidebar & Main Content */}
+      <div className="hidden md:flex min-h-screen">
+        {/* Fixed Desktop Sidebar */}
+        <aside className="w-64 bg-slate-50 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col justify-between fixed top-0 bottom-0 left-0 z-30 shadow-sm">
+          <div>
+            {/* Logo / Brand */}
+            <div className="p-6 border-b border-slate-100 dark:border-slate-700/60 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
+                <Wallet size={22} />
+              </div>
+              <div>
+                <h1 className="font-extrabold text-base tracking-tight text-slate-900 dark:text-slate-100">Simzy Cash</h1>
+                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">Cash Book & Saver</p>
+              </div>
+            </div>
+
+            {/* Navigation Menu */}
+            <nav className="p-4 space-y-1.5">
+              <button
+                onClick={() => setCurrentTab('dashboard')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                  currentTab === 'dashboard'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50 shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-100'
+                }`}
+              >
+                <Wallet size={18} />
+                <span>Dashboard</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentTab('transactions')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                  currentTab === 'transactions'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50 shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-100'
+                }`}
+              >
+                <LogIn size={18} className="rotate-90" />
+                <span>Cash Book</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentTab('analysis')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                  currentTab === 'analysis'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50 shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-100'
+                }`}
+              >
+                <Mail size={18} />
+                <span>Audit Analytics</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentTab('goals')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                  currentTab === 'goals'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50 shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-100'
+                }`}
+              >
+                <Key size={18} />
+                <span>Savings Goals</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentTab('profile')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                  currentTab === 'profile'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50 shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-100'
+                }`}
+              >
+                <Wallet size={18} />
+                <span>Settings & Profile</span>
+              </button>
+            </nav>
+          </div>
+
+          {/* User badge & Appearance Toggle at bottom of sidebar */}
+          <div className="p-4 border-t border-slate-100 dark:border-slate-700/60 space-y-3">
+            <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/50">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Appearance</span>
+              <button
+                onClick={toggleDarkMode}
+                className="text-xs font-bold px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm hover:border-emerald-500 transition-colors"
+              >
+                {darkMode ? '🌙 Dark' : '☀️ Light'}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3 px-2 pt-1">
+              <div className="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-700 dark:text-emerald-400 font-extrabold text-sm uppercase shadow-sm">
+                {user?.name?.[0] || 'U'}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold truncate text-slate-800 dark:text-slate-200">{user?.name || 'User'}</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{user?.email || 'Offline mode'}</p>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Workspace Pane */}
+        <main className="flex-1 ml-64 min-h-screen pb-12">
+          {/* Top Desktop Bar */}
+          <header className="sticky top-0 z-20 bg-slate-100/90 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-700/80 px-8 py-4 flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight capitalize">
+                {currentTab === 'dashboard' && 'Dashboard Overview'}
+                {currentTab === 'transactions' && 'Cash Book Register'}
+                {currentTab === 'analysis' && 'Financial Audit & Analytics'}
+                {currentTab === 'goals' && 'Savings Goals Manager'}
+                {currentTab === 'profile' && 'Profile & Accounts Settings'}
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Simzy Cash Saver • Professional PC Edition</p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="px-3.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/50 text-xs font-bold flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Ready</span>
+              </div>
+            </div>
+          </header>
+
+          {/* Desktop Content Max Width Container */}
+          <div className="p-8 max-w-7xl mx-auto">
+            {currentTab === 'dashboard' && <Dashboard />}
+            {currentTab === 'transactions' && <Transactions />}
+            {currentTab === 'analysis' && <Analysis />}
+            {currentTab === 'goals' && <Goals />}
+            {currentTab === 'profile' && <Profile />}
+          </div>
+        </main>
+      </div>
+
+      {/* Mobile Layout */}
+      <div className="md:hidden mx-auto max-w-md relative pb-16 min-h-screen shadow-2xl bg-slate-100 dark:bg-slate-900">
+        {currentTab === 'dashboard' && <Dashboard />}
+        {currentTab === 'transactions' && <Transactions />}
+        {currentTab === 'analysis' && <Analysis />}
+        {currentTab === 'goals' && <Goals />}
+        {currentTab === 'profile' && <Profile />}
+        
+        <BottomNav currentTab={currentTab} setCurrentTab={setCurrentTab} />
+      </div>
+
     </div>
   );
 }

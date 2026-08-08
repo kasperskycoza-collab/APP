@@ -101,129 +101,190 @@ export default function Dashboard() {
   const monthlySavingsProgress = totalGoalTarget > 0 ? (totalGoalCurrent / totalGoalTarget) * 100 : 0;
 
   return (
-    <div className="pb-24">
-      <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 text-white p-5 rounded-b-2xl shadow-lg relative z-10">
-        <div className="flex justify-between items-center mb-6 mt-1">
-          <div className="text-2xl font-extrabold tracking-tight">Simzy Cash Saver</div>
-        </div>
-        
-        <div className="bg-white/10 dark:bg-slate-800/15 backdrop-blur-md rounded-2xl p-5 text-center border border-white/20">
-          <div className="text-xs uppercase tracking-wide opacity-90 mb-2">Total Savings Balance</div>
-          <div className="text-2xl sm:text-3xl font-extrabold mb-4 break-words">{formatCurrency(totalBalance)}</div>
-          
-          <div className="flex justify-between gap-3 overflow-hidden">
-            <div className="flex-1 bg-white/10 dark:bg-slate-800/10 rounded-xl p-3 min-w-0">
-              <div className="text-xs opacity-80 mb-1 truncate">Today's Income</div>
-              <div className="text-base sm:text-lg font-bold text-emerald-100 break-words">+{formatCurrency(todayIncome)}</div>
+    <div className="pb-24 md:pb-8 space-y-6">
+      {/* Top Total Balance & Today's Summary Card */}
+      <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-xl relative z-10 overflow-hidden">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div className="text-xs md:text-sm uppercase tracking-wider font-bold opacity-80 mb-1">Total Savings Balance</div>
+            <div className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight break-words">{formatCurrency(totalBalance)}</div>
+            <div className="text-xs opacity-75 mt-2 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping"></span>
+              Live Cash Book Register
             </div>
-            <div className="flex-1 bg-white/10 dark:bg-slate-800/10 rounded-xl p-3 min-w-0">
-              <div className="text-xs opacity-80 mb-1 truncate">Today's Expenses</div>
-              <div className="text-base sm:text-lg font-bold text-red-100 break-words">-{formatCurrency(todayExpense)}</div>
+          </div>
+          
+          <div className="flex gap-3 sm:gap-4 overflow-hidden w-full md:w-auto">
+            <div className="flex-1 md:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-4 border border-white/20 min-w-0">
+              <div className="text-xs opacity-80 mb-1 font-medium truncate">Today's Income</div>
+              <div className="text-lg sm:text-xl font-black text-emerald-200 break-words">+{formatCurrency(todayIncome)}</div>
+            </div>
+            <div className="flex-1 md:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-4 border border-white/20 min-w-0">
+              <div className="text-xs opacity-80 mb-1 font-medium truncate">Today's Expenses</div>
+              <div className="text-lg sm:text-xl font-black text-red-200 break-words">-{formatCurrency(todayExpense)}</div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 p-5">
+      {/* Quick Action Buttons Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <button 
           onClick={() => { setTransactionType('income'); setIsAddTransactionOpen(true); }}
-          className="bg-white dark:bg-slate-800 rounded-xl p-4 text-center border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center gap-2 transition-transform active:scale-95 hover:border-emerald-200"
+          className="bg-white dark:bg-slate-800 rounded-2xl p-4 md:p-5 text-center border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center gap-2.5 transition-all hover:border-emerald-500 hover:shadow-md active:scale-95 group"
         >
-          <ArrowDown className="text-emerald-500" size={24} />
-          <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">Add Income</span>
+          <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+            <ArrowDown size={24} />
+          </div>
+          <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Add Income</span>
         </button>
+
         <button 
           onClick={() => { setTransactionType('expense'); setIsAddTransactionOpen(true); }}
-          className="bg-white dark:bg-slate-800 rounded-xl p-4 text-center border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center gap-2 transition-transform active:scale-95 hover:border-red-200"
+          className="bg-white dark:bg-slate-800 rounded-2xl p-4 md:p-5 text-center border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center gap-2.5 transition-all hover:border-red-500 hover:shadow-md active:scale-95 group"
         >
-          <ArrowUp className="text-red-500" size={24} />
-          <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">Add Expense</span>
+          <div className="w-12 h-12 rounded-xl bg-red-50 dark:bg-red-950/50 flex items-center justify-center text-red-600 dark:text-red-400 group-hover:scale-110 transition-transform">
+            <ArrowUp size={24} />
+          </div>
+          <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Add Expense</span>
         </button>
+
         <button 
           onClick={() => setIsAddGoalOpen(true)}
-          className="bg-white dark:bg-slate-800 rounded-xl p-4 text-center border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center gap-2 transition-transform active:scale-95 hover:border-amber-200"
+          className="bg-white dark:bg-slate-800 rounded-2xl p-4 md:p-5 text-center border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center gap-2.5 transition-all hover:border-amber-500 hover:shadow-md active:scale-95 group"
         >
-          <Target className="text-amber-500" size={24} />
-          <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">New Goal</span>
+          <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
+            <Target size={24} />
+          </div>
+          <span className="text-sm font-bold text-slate-700 dark:text-slate-200">New Goal</span>
         </button>
+
         <button 
           onClick={() => setIsTransferOpen(true)}
-          className="bg-white dark:bg-slate-800 rounded-xl p-4 text-center border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center gap-2 transition-transform active:scale-95 hover:border-blue-200"
+          className="bg-white dark:bg-slate-800 rounded-2xl p-4 md:p-5 text-center border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center gap-2.5 transition-all hover:border-blue-500 hover:shadow-md active:scale-95 group"
         >
-          <ArrowRightLeft className="text-blue-500" size={24} />
-          <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">Transfer</span>
+          <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-950/50 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+            <ArrowRightLeft size={24} />
+          </div>
+          <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Transfer</span>
         </button>
       </div>
 
-      <div className="px-5 mb-6">
-        <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
-          <h2 className="font-bold flex items-center gap-2 text-slate-800 dark:text-slate-100 mb-4">
-            <TrendingUp size={18} className="text-blue-500" /> This Month
-          </h2>
+      {/* Main Grid Section: Chart & Goals Progress */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Monthly Trend Chart Pane */}
+        <div className="lg:col-span-8 bg-white dark:bg-slate-800 md:bg-emerald-50/70 md:dark:bg-slate-800 text-slate-800 dark:text-slate-100 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 md:border-emerald-200/80 md:dark:border-slate-700 shadow-sm flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="font-extrabold text-base md:text-lg flex items-center gap-2 text-slate-800 dark:text-slate-100">
+              <TrendingUp size={20} className="text-emerald-600 dark:text-emerald-400" />
+              Cash Flow Summary (This Month)
+            </h2>
+            <div className="text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 md:bg-emerald-100/80 md:dark:bg-slate-700 text-slate-700 dark:text-slate-300 md:text-emerald-900 md:dark:text-emerald-200">
+              In: {formatCurrency(monthlyIncome)} | Out: {formatCurrency(monthlyExpense)}
+            </div>
+          </div>
           
-          <div style={{ width: '100%', height: 130 }} className="mb-6">
+          <div style={{ width: '100%', height: 200 }} className="mb-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={(val) => formatCurrency(val)} width={80} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => formatCurrency(val)} width={80} />
                 <Tooltip 
                   formatter={(value: number) => formatCurrency(value)}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  cursor={{ fill: '#f8fafc' }}
+                  contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', color: '#0f172a', boxShadow: '0 4px 12px -2px rgb(0 0 0 / 0.1)' }}
+                  cursor={false}
                 />
-                <Bar dataKey="income" name="Income" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                <Bar dataKey="expense" name="Expense" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="income" name="Income" fill="#10b981" radius={[6, 6, 0, 0]} maxBarSize={50} />
+                <Bar dataKey="expense" name="Expense" fill="#ef4444" radius={[6, 6, 0, 0]} maxBarSize={50} />
               </BarChart>
             </ResponsiveContainer>
           </div>
+        </div>
 
+        {/* Goals Progress Card Pane */}
+        <div className="lg:col-span-4 bg-white dark:bg-slate-800 md:bg-emerald-50/70 md:dark:bg-slate-800 text-slate-800 dark:text-slate-100 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 md:border-emerald-200/80 md:dark:border-slate-700 shadow-sm flex flex-col justify-between">
           <div>
-             <div className="flex justify-between text-sm mb-1">
-               <span className="font-semibold text-slate-600 dark:text-slate-300">Overall Goals Progress</span>
-               <span className="font-bold text-slate-800 dark:text-slate-100">{Math.round(monthlySavingsProgress)}%</span>
-             </div>
-             <div className="h-2.5 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden">
-               <div 
-                 className="h-full bg-emerald-500 transition-all duration-1000" 
-                 style={{ width: `${Math.min(monthlySavingsProgress, 100)}%` }}
-               ></div>
-             </div>
+            <h2 className="font-extrabold text-base md:text-lg flex items-center gap-2 text-slate-800 dark:text-slate-100 mb-4">
+              <Target size={20} className="text-amber-500 md:text-emerald-600 md:dark:text-emerald-400" />
+              Overall Goals Progress
+            </h2>
+            <div className="space-y-4">
+              <div className="bg-slate-50 dark:bg-slate-900/50 md:bg-white/80 md:dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700/50 md:border-emerald-200/60">
+                <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase">
+                  <span>Saved</span>
+                  <span>Target</span>
+                </div>
+                <div className="flex justify-between text-base font-black text-slate-800 dark:text-slate-100">
+                  <span>{formatCurrency(totalGoalCurrent)}</span>
+                  <span>{formatCurrency(totalGoalTarget)}</span>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-xs font-bold mb-1.5">
+                  <span className="text-slate-600 dark:text-slate-300">Completion Status</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{Math.round(monthlySavingsProgress)}%</span>
+                </div>
+                <div className="h-3 bg-slate-100 dark:bg-slate-900 md:bg-emerald-200/50 md:dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200/20 md:border-emerald-200/40">
+                  <div 
+                    className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all duration-1000" 
+                    style={{ width: `${Math.min(monthlySavingsProgress, 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
           </div>
+
+          <button 
+            onClick={() => setIsAddGoalOpen(true)}
+            className="w-full mt-6 py-3 bg-emerald-50 dark:bg-emerald-950/40 md:bg-emerald-600 md:hover:bg-emerald-700 text-emerald-700 dark:text-emerald-400 md:text-white font-bold rounded-xl text-xs hover:bg-emerald-100 transition-colors border border-emerald-200/50 dark:border-emerald-800/50 md:border-transparent flex items-center justify-center gap-2"
+          >
+            + Create New Savings Goal
+          </button>
         </div>
       </div>
 
-      <div className="px-5">
-        <h2 className="text-lg font-bold mb-3 text-slate-800 dark:text-slate-100">Recent Transactions</h2>
-        <div className="space-y-2">
+      {/* Recent Transactions Section */}
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-base md:text-lg font-extrabold text-slate-800 dark:text-slate-100">Recent Transactions</h2>
+          <span className="text-xs text-slate-400 font-semibold">Latest 5 Entries</span>
+        </div>
+        
+        <div className="space-y-2.5">
           {transactions.slice(0, 5).map(t => {
             const netBal = transactionNetBalances[t.id] ?? 0;
             return (
               <div 
                 key={t.id} 
                 onClick={() => setSelectedTransaction(t)}
-                className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4 cursor-pointer hover:border-emerald-500/30 dark:hover:border-slate-600 transition-all hover:shadow active:scale-[99.5%] active:bg-slate-50/50 dark:active:bg-slate-800/80"
+                className="bg-slate-50/70 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/60 shadow-sm flex items-center gap-4 cursor-pointer hover:border-emerald-500/50 dark:hover:border-slate-500 transition-all hover:bg-white dark:hover:bg-slate-800"
               >
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${t.type === 'income' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600' : 'bg-red-50 dark:bg-red-900/30 text-red-600'}`}>
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${t.type === 'income' ? 'bg-emerald-100/80 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400' : 'bg-red-100/80 dark:bg-red-900/40 text-red-600 dark:text-red-400'}`}>
                   {t.type === 'income' ? <ArrowDown size={20} /> : <ArrowUp size={20} />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-slate-900 dark:text-slate-100 truncate">{t.description}</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">{new Date(t.date).toLocaleDateString()}</div>
+                  <div className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">{t.description}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-0.5">
+                    <span className="capitalize font-medium">{t.category}</span>
+                    <span>•</span>
+                    <span>{new Date(t.date).toLocaleDateString()}</span>
+                  </div>
                 </div>
                 <div className="flex flex-col items-end gap-1 flex-shrink-0 ml-2">
-                  <div className={`font-bold ${t.type === 'income' ? 'text-emerald-600' : 'text-red-600'}`}>
+                  <div className={`font-black text-sm ${t.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                     {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
                   </div>
-                  <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                    Bal: {formatCurrency(netBal)}
+                  <div className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold">
+                    Running Bal: {formatCurrency(netBal)}
                   </div>
                 </div>
               </div>
             );
           })}
           {transactions.slice(0, 5).length === 0 && (
-            <div className="text-center py-5 text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">No transactions yet.</div>
+            <div className="text-center py-8 text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-700">No transactions recorded yet.</div>
           )}
         </div>
       </div>

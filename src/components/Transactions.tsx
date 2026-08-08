@@ -122,6 +122,20 @@ export default function Transactions() {
     }, {} as Record<string, Record<string, Transaction[]>>);
   }, [filteredTransactions, timeGroup]);
 
+  const totalBalance = useMemo(() => {
+    return accounts.reduce((sum, acc) => sum + acc.balance, 0);
+  }, [accounts]);
+
+  const { totalInflow, totalOutflow } = useMemo(() => {
+    let inflow = 0;
+    let outflow = 0;
+    filteredTransactions.forEach(t => {
+      if (t.type === 'income') inflow += t.amount;
+      else outflow += t.amount;
+    });
+    return { totalInflow: inflow, totalOutflow: outflow };
+  }, [filteredTransactions]);
+
   const handleDelete = (id: number) => {
     setDeletingTransactionId(id);
   };
@@ -212,103 +226,133 @@ export default function Transactions() {
   };
 
   return (
-    <div className="pb-24">
-      <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 text-white p-5 sticky top-0 z-20 shadow-md">
-        <div className="flex justify-between items-center mb-4">
-          <div className="text-xl font-bold flex items-center gap-2">Cash Book</div>
-          <button onClick={() => setIsAddOpen(true)} className="w-10 h-10 rounded-full bg-black/10 dark:bg-slate-800/20 flex items-center justify-center backdrop-blur-sm text-white">
-            <Plus size={20} />
-          </button>
-        </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60" size={18} />
-          <input 
-            type="text" 
-            placeholder="Search transactions..." 
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full bg-black/10 dark:bg-slate-800/10 border border-white/20 rounded-xl py-2 pl-10 pr-4 text-white placeholder-white/60 focus:outline-none focus:border-white transition-colors"
-          />
+    <div className="pb-24 md:pb-8 space-y-6">
+      {/* Top Green Banner Card - Identical in size, style & rounded edges to Dashboard */}
+      <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-xl relative z-10 overflow-hidden">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div className="text-xs md:text-sm uppercase tracking-wider font-bold opacity-80 mb-1">Total Savings Balance</div>
+            <div className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight break-words">{formatCurrency(totalBalance)}</div>
+            <div className="text-xs opacity-75 mt-2 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping"></span>
+              Live Cash Book Register
+            </div>
+          </div>
+          
+          <div className="flex gap-3 sm:gap-4 overflow-hidden w-full md:w-auto">
+            <div className="flex-1 md:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-4 border border-white/20 min-w-0">
+              <div className="text-xs opacity-80 mb-1 font-medium truncate">Total Inflow</div>
+              <div className="text-lg sm:text-xl font-black text-emerald-200 break-words">+{formatCurrency(totalInflow)}</div>
+            </div>
+            <div className="flex-1 md:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-4 border border-white/20 min-w-0">
+              <div className="text-xs opacity-80 mb-1 font-medium truncate">Total Outflow</div>
+              <div className="text-lg sm:text-xl font-black text-red-200 break-words">-{formatCurrency(totalOutflow)}</div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="p-5">
-        <div className="flex flex-col gap-4 mb-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden flex-1 sm:flex-none">
-              <button
-                onClick={() => setViewMode('grouped')}
-                className={`flex-1 sm:flex-none px-3 py-2 text-sm font-medium transition-colors border-r border-slate-200 dark:border-slate-700 last:border-0 ${
-                  viewMode === 'grouped' ? 'bg-slate-100 dark:bg-slate-800 text-emerald-700' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900'
-                }`}
-                aria-label="Grouped view"
-              >
-                Grouped
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`flex-1 sm:flex-none px-3 py-2 text-sm font-medium transition-colors border-r border-slate-200 dark:border-slate-700 last:border-0 ${
-                  viewMode === 'list' ? 'bg-slate-100 dark:bg-slate-800 text-emerald-700' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900'
-                }`}
-                aria-label="List view"
-              >
-                List
-              </button>
-              <button
-                onClick={() => setViewMode('details')}
-                className={`flex-1 sm:flex-none px-3 py-2 text-sm font-medium transition-colors last:border-0 ${
-                  viewMode === 'details' ? 'bg-slate-100 dark:bg-slate-800 text-emerald-700' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900'
-                }`}
-                aria-label="Details view"
-              >
-                Details
-              </button>
-            </div>
-
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-lg px-3 py-2 cursor-pointer focus:outline-none focus:border-emerald-500 transition-colors hidden sm:block"
-            >
-              <option value="date_desc">Newest First</option>
-              <option value="date_asc">Oldest First</option>
-              <option value="amount_desc">Highest Amount</option>
-              <option value="amount_asc">Lowest Amount</option>
-            </select>
+      {/* Structured Cashbook Adjustments Form Panel */}
+      <div className="bg-white dark:bg-slate-800 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-700/60">
+          <div className="flex items-center gap-2">
+            <Filter className="text-emerald-600 dark:text-emerald-400" size={20} />
+            <h3 className="font-extrabold text-base text-slate-800 dark:text-slate-100">Cashbook Adjustments & Form Controls</h3>
           </div>
+          
+          <button 
+            onClick={() => setIsAddOpen(true)}
+            className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs md:text-sm shadow-md flex items-center justify-center gap-2 transition-transform active:scale-95 flex-shrink-0"
+          >
+            <Plus size={18} /> New Entry
+          </button>
+        </div>
 
-          <div className="flex gap-2 items-center flex-wrap">
-            <div className="flex gap-2">
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={18} />
+          <input 
+            type="text" 
+            placeholder="Search description, category, or notes..." 
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-emerald-500 transition-colors"
+          />
+        </div>
+
+        {/* Adjustments Form Controls Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+          {/* Transaction Type Filter */}
+          <div>
+            <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
+              Type Filter
+            </label>
+            <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
               {(['all', 'income', 'expense'] as const).map(type => (
                 <button
                   key={type}
                   onClick={() => setFilterType(type)}
-                  className={`flex-1 sm:flex-none px-4 py-1.5 rounded-full text-sm font-semibold capitalize transition-colors ${
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg capitalize transition-all ${
                     filterType === type 
-                      ? 'bg-emerald-600 text-white shadow-sm' 
-                      : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
+                      ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-200/50 dark:border-slate-700' 
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                 >
                   {type}
                 </button>
               ))}
             </div>
-            {viewMode === 'grouped' && (
-              <select
-                value={timeGroup}
-                onChange={(e) => setTimeGroup(e.target.value as TimeGroup)}
-                className="text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-lg px-3 py-1.5 cursor-pointer focus:outline-none focus:border-emerald-500 transition-colors ml-auto"
-              >
-                <option value="daily">Daily</option>
-                <option value="week">Weekly</option>
-                <option value="month">Monthly</option>
-                <option value="year">Yearly</option>
-              </select>
-            )}
+          </div>
+
+          {/* View Mode Layout */}
+          <div>
+            <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
+              Layout View
+            </label>
+            <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+              {(['grouped', 'list', 'details'] as const).map(mode => (
+                <button
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg capitalize transition-all ${
+                    viewMode === mode 
+                      ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-200/50 dark:border-slate-700' 
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  {mode}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Grouping Interval */}
+          <div>
+            <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
+              Time Grouping
+            </label>
+            <select
+              value={timeGroup}
+              onChange={(e) => setTimeGroup(e.target.value as TimeGroup)}
+              disabled={viewMode !== 'grouped'}
+              className="w-full text-xs font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl px-3 py-2.5 cursor-pointer focus:outline-none focus:border-emerald-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="daily">Daily Groups</option>
+              <option value="week">Weekly Groups</option>
+              <option value="month">Monthly Groups</option>
+              <option value="year">Yearly Groups</option>
+            </select>
+          </div>
+
+          {/* Sort Order */}
+          <div>
+            <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
+              Sort Sequence
+            </label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-lg px-3 py-2 cursor-pointer focus:outline-none focus:border-emerald-500 transition-colors sm:hidden w-full mt-2"
+              className="w-full text-xs font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl px-3 py-2.5 cursor-pointer focus:outline-none focus:border-emerald-500 transition-colors"
             >
               <option value="date_desc">Newest First</option>
               <option value="date_asc">Oldest First</option>
@@ -317,7 +361,9 @@ export default function Transactions() {
             </select>
           </div>
         </div>
+      </div>
 
+      <div className="p-5 md:p-0">
         <div className="space-y-6">
           {viewMode === 'grouped' ? (
             Object.entries(groupedTransactions).map(([accountId, periodsMap]) => {
