@@ -3,7 +3,9 @@ import { persist } from 'zustand/middleware';
 import { AppState, Transaction, Goal, Account } from './types';
 
 interface StoreState extends AppState {
-  login: (userInfo: { email: string; name?: string; photoURL?: string; id?: string }) => void;
+  login: (userInfo: { email: string; name?: string; firstName?: string; surname?: string; photoURL?: string; id?: string }) => void;
+  registerOfflineUser: (firstName: string, surname: string, email: string) => { success: boolean; error?: string };
+  accessOfflineUser: (email: string) => { success: boolean; error?: string };
   logout: () => void;
   addTransaction: (tx: Omit<Transaction, 'id'>) => void;
   editTransaction: (id: number, tx: Partial<Omit<Transaction, 'id'>>) => void;
@@ -25,6 +27,8 @@ export const useStore = create<StoreState>()(
   persist(
     (set, get) => ({
       user: null,
+      registeredUsers: [],
+      registeredEmails: [],
       accounts: [{ id: 'default', name: 'Main Account', balance: 0, isDefault: true }],
       transactions: [],
       goals: [],
@@ -36,15 +40,133 @@ export const useStore = create<StoreState>()(
       expenseCategories: ['food', 'transport', 'rent', 'shopping', 'bills', 'health', 'education', 'transfer', 'other'],
       incomeCategories: ['salary', 'freelance', 'investments', 'gifts', 'transfer', 'other'],
 
-      login: (userInfo) => set({ 
-        user: { 
-          name: userInfo.name || userInfo.email.split('@')[0], 
-          email: userInfo.email,
-          photoURL: userInfo.photoURL,
-          id: userInfo.id
-        }, 
-        isLoggedIn: true 
-      }),
+      login: (userInfo) => {
+        const cleanEmail = (userInfo.email || '').trim().toLowerCase();
+        const existingUsers = get().registeredUsers || [];
+        const existingEmails = get().registeredEmails || [];
+
+        let firstName = userInfo.firstName;
+        let surname = userInfo.surname;
+        if (!firstName && userInfo.name) {
+          const parts = userInfo.name.trim().split(' ');
+          firstName = parts[0] || 'User';
+          surname = parts.slice(1).join(' ') || '';
+        }
+
+        const fullName = userInfo.name || (firstName ? `${firstName} ${surname}`.trim() : cleanEmail.split('@')[0]);
+
+        const updatedEmails = existingEmails.includes(cleanEmail) || !cleanEmail 
+          ? existingEmails 
+          : [...existingEmails, cleanEmail];
+
+        const alreadyInUsers = existingUsers.some(u => u.email.toLowerCase() === cleanEmail);
+        const updatedUsers = alreadyInUsers || !cleanEmail 
+          ? existingUsers 
+          : [...existingUsers, { firstName: firstName || fullName, surname: surname || '', email: cleanEmail, registeredAt: new Date().toISOString() }];
+
+        set({ 
+          user: { 
+            name: fullName, 
+            email: cleanEmail || userInfo.email,
+            firstName: firstName,
+            surname: surname,
+            photoURL: userInfo.photoURL,
+            id: userInfo.id
+          }, 
+          registeredEmails: updatedEmails,
+          registeredUsers: updatedUsers,
+          isLoggedIn: true 
+        });
+      },
+
+      registerOfflineUser: (firstNameRaw, surnameRaw, emailRaw) => {
+        const firstName = firstNameRaw.trim();
+        const surname = surnameRaw.trim();
+        const email = emailRaw.trim().toLowerCase();
+
+        if (!firstName) {
+          return { success: false, error: 'First Name is required.' };
+        }
+        if (!surname) {
+          return { success: false, error: 'Surname / Last Name is required.' };
+        }
+        if (!email) {
+          return { success: false, error: 'Email address is required.' };
+        }
+
+        // Validate email format strictly
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          return { success: false, error: 'Please enter a valid email address (e.g. name@example.com).' };
+        }
+
+        const state = get();
+        const existingEmails = (state.registeredEmails || []).map(e => e.toLowerCase());
+
+        // Check if email is already registered
+        if (existingEmails.includes(email)) {
+          return { 
+            success: false, 
+            error: `The email "${email}" is already registered. You cannot register it again. Please sign in instead.` 
+          };
+        }
+
+        const fullName = `${firstName} ${surname}`;
+        const newRegisteredUser = {
+          firstName,
+          surname,
+          email,
+          registeredAt: new Date().toISOString()
+        };
+
+        const updatedUsers = [...(state.registeredUsers || []), newRegisteredUser];
+        const updatedEmails = [...(state.registeredEmails || []), email];
+
+        set({
+          user: {
+            id: 'off_' + Date.now(),
+            name: fullName,
+            email: email,
+            firstName,
+            surname
+          },
+          registeredUsers: updatedUsers,
+          registeredEmails: updatedEmails,
+          isLoggedIn: true
+        });
+
+        return { success: true };
+      },
+
+      accessOfflineUser: (emailRaw) => {
+        const email = emailRaw.trim().toLowerCase();
+        if (!email) {
+          return { success: false, error: 'Please enter your registered email address.' };
+        }
+
+        const state = get();
+        const users = state.registeredUsers || [];
+        const found = users.find(u => u.email.toLowerCase() === email);
+
+        if (!found) {
+          return { success: false, error: `No registered offline account found for "${email}". Please register a new account.` };
+        }
+
+        const fullName = `${found.firstName} ${found.surname}`.trim() || found.email.split('@')[0];
+
+        set({
+          user: {
+            id: 'off_' + Date.now(),
+            name: fullName,
+            email: found.email,
+            firstName: found.firstName,
+            surname: found.surname
+          },
+          isLoggedIn: true
+        });
+
+        return { success: true };
+      },
       
       logout: () => set({ user: null, isLoggedIn: false }),
       
@@ -330,6 +452,20 @@ export const useStore = create<StoreState>()(
     }),
     {
       name: 'simzy-storage',
+      merge: (persistedState: any, currentState: StoreState) => {
+        const ps = (persistedState && typeof persistedState === 'object') ? persistedState : {};
+        return {
+          ...currentState,
+          ...ps,
+          registeredUsers: Array.isArray(ps.registeredUsers) ? ps.registeredUsers : (currentState.registeredUsers || []),
+          registeredEmails: Array.isArray(ps.registeredEmails) ? ps.registeredEmails : (currentState.registeredEmails || []),
+          accounts: (Array.isArray(ps.accounts) && ps.accounts.length > 0) ? ps.accounts : currentState.accounts,
+          transactions: Array.isArray(ps.transactions) ? ps.transactions : (currentState.transactions || []),
+          goals: Array.isArray(ps.goals) ? ps.goals : (currentState.goals || []),
+          expenseCategories: Array.isArray(ps.expenseCategories) ? ps.expenseCategories : currentState.expenseCategories,
+          incomeCategories: Array.isArray(ps.incomeCategories) ? ps.incomeCategories : currentState.incomeCategories,
+        };
+      }
     }
   )
 );

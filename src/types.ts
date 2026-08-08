@@ -31,8 +31,17 @@ export interface Account {
   isDefault: boolean;
 }
 
+export interface RegisteredUser {
+  firstName: string;
+  surname: string;
+  email: string;
+  registeredAt?: string;
+}
+
 export interface AppState {
-  user: { id?: string; name: string; email: string; photoURL?: string } | null;
+  user: { id?: string; name: string; email: string; firstName?: string; surname?: string; photoURL?: string } | null;
+  registeredUsers: RegisteredUser[];
+  registeredEmails: string[];
   accounts: Account[];
   transactions: Transaction[];
   goals: Goal[];

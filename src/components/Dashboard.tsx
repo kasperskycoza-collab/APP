@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { formatCurrency as formatMoney } from '../utils';
+import { formatCurrency as formatMoney, getBoxValueClass, getMainValueClass } from '../utils';
 import { ArrowDown, ArrowUp, Target, ArrowRightLeft, TrendingUp } from 'lucide-react';
 import { useStore } from '../store';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
@@ -101,27 +101,27 @@ export default function Dashboard() {
   const monthlySavingsProgress = totalGoalTarget > 0 ? (totalGoalCurrent / totalGoalTarget) * 100 : 0;
 
   return (
-    <div className="pb-24 md:pb-8 space-y-6">
+    <div className="pb-24 md:pb-8 space-y-6 min-w-0 max-w-full overflow-x-hidden">
       {/* Top Total Balance & Today's Summary Card */}
-      <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-xl relative z-10 overflow-hidden">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
+      <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white p-5 md:p-6 lg:p-8 rounded-2xl md:rounded-3xl shadow-xl relative z-10 overflow-hidden">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6">
+          <div className="min-w-0 flex-1">
             <div className="text-xs md:text-sm uppercase tracking-wider font-bold opacity-80 mb-1">Total Savings Balance</div>
-            <div className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight break-words">{formatCurrency(totalBalance)}</div>
+            <div className={getMainValueClass(formatCurrency(totalBalance))}>{formatCurrency(totalBalance)}</div>
             <div className="text-xs opacity-75 mt-2 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping"></span>
-              Live Cash Book Register
+              <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping flex-shrink-0"></span>
+              <span className="truncate">Live Cash Book Register</span>
             </div>
           </div>
           
-          <div className="flex gap-3 sm:gap-4 overflow-hidden w-full md:w-auto">
-            <div className="flex-1 md:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-4 border border-white/20 min-w-0">
+          <div className="flex gap-2.5 sm:gap-4 overflow-hidden w-full lg:w-auto">
+            <div className="flex-1 lg:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/20 min-w-0 flex flex-col justify-center">
               <div className="text-xs opacity-80 mb-1 font-medium truncate">Today's Income</div>
-              <div className="text-lg sm:text-xl font-black text-emerald-200 break-words">+{formatCurrency(todayIncome)}</div>
+              <div className={`text-emerald-200 ${getBoxValueClass('+' + formatCurrency(todayIncome))}`}>+{formatCurrency(todayIncome)}</div>
             </div>
-            <div className="flex-1 md:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-4 border border-white/20 min-w-0">
+            <div className="flex-1 lg:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/20 min-w-0 flex flex-col justify-center">
               <div className="text-xs opacity-80 mb-1 font-medium truncate">Today's Expenses</div>
-              <div className="text-lg sm:text-xl font-black text-red-200 break-words">-{formatCurrency(todayExpense)}</div>
+              <div className={`text-red-200 ${getBoxValueClass('-' + formatCurrency(todayExpense))}`}>-{formatCurrency(todayExpense)}</div>
             </div>
           </div>
         </div>
@@ -179,8 +179,8 @@ export default function Dashboard() {
               <TrendingUp size={20} className="text-emerald-600 dark:text-emerald-400" />
               Cash Flow Summary (This Month)
             </h2>
-            <div className="text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 md:bg-emerald-100/80 md:dark:bg-slate-700 text-slate-700 dark:text-slate-300 md:text-emerald-900 md:dark:text-emerald-200">
-              In: {formatCurrency(monthlyIncome)} | Out: {formatCurrency(monthlyExpense)}
+            <div className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/60 px-3 py-1 rounded-full">
+              Monthly Register
             </div>
           </div>
           
@@ -199,6 +199,49 @@ export default function Dashboard() {
                 <Bar dataKey="expense" name="Expense" fill="#ef4444" radius={[6, 6, 0, 0]} maxBarSize={50} />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+
+          {/* Bottom Summary & Legend Badges with Corresponding Colors */}
+          <div className="pt-3.5 border-t border-slate-200/60 dark:border-slate-700/60 grid grid-cols-3 gap-1.5 sm:gap-3 items-center w-full">
+            {/* Amount In Badge */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1.5 py-2 sm:px-3 sm:py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 shadow-sm min-w-0 text-center">
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
+                <span className="text-[10px] sm:text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                  In<span className="hidden sm:inline">come</span>:
+                </span>
+              </div>
+              <span className="font-black text-emerald-600 dark:text-emerald-400 text-[10px] xs:text-xs sm:text-sm whitespace-nowrap">
+                +{formatCurrency(monthlyIncome)}
+              </span>
+            </div>
+
+            {/* Amount Out Badge */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1.5 py-2 sm:px-3 sm:py-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200/80 dark:border-red-800/60 shadow-sm min-w-0 text-center">
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-red-500 flex-shrink-0 animate-pulse"></span>
+                <span className="text-[10px] sm:text-xs font-bold text-red-800 dark:text-red-300">
+                  Out<span className="hidden sm:inline">go</span>:
+                </span>
+              </div>
+              <span className="font-black text-red-600 dark:text-red-400 text-[10px] xs:text-xs sm:text-sm whitespace-nowrap">
+                -{formatCurrency(monthlyExpense)}
+              </span>
+            </div>
+
+            {/* Net Flow Balance Badge */}
+            <div className={`flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1.5 py-2 sm:px-3 sm:py-2.5 rounded-xl border text-center shadow-sm min-w-0 ${
+              (monthlyIncome - monthlyExpense) >= 0 
+                ? 'bg-emerald-100/80 dark:bg-emerald-900/50 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200' 
+                : 'bg-red-100/80 dark:bg-red-900/50 border-red-300 dark:border-red-700 text-red-800 dark:text-red-200'
+            }`}>
+              <span className="text-[10px] sm:text-xs font-bold opacity-90 flex-shrink-0">
+                Net<span className="hidden sm:inline"> Flow</span>:
+              </span>
+              <span className="font-black text-[10px] xs:text-xs sm:text-sm whitespace-nowrap">
+                {(monthlyIncome - monthlyExpense) >= 0 ? '+' : ''}{formatCurrency(monthlyIncome - monthlyExpense)}
+              </span>
+            </div>
           </div>
         </div>
 

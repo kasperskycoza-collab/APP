@@ -156,43 +156,45 @@ export default function Profile() {
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-300"></span>
               Simzy Cash Saver Pro
             </div>
-            <h2 className="text-base sm:text-lg font-black tracking-tight truncate leading-tight">{user?.name}</h2>
+            <h2 className="text-base sm:text-lg font-black tracking-tight truncate leading-tight">
+              {user?.firstName && user?.surname ? `${user.firstName} ${user.surname}` : user?.name || 'Valued User'}
+            </h2>
             <p className="opacity-80 text-xs font-medium truncate mt-0.5">{user?.email}</p>
           </div>
         </div>
 
-        {/* Floating Cash & Dollar Signs Animation (Desktop Only) */}
-        <div className="hidden md:flex items-center gap-1.5 sm:gap-2 pr-1 pointer-events-none select-none flex-shrink-0">
+        {/* Floating Cash & Dollar Signs Animation (Visible on Mobile & Desktop) */}
+        <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 pr-0.5 sm:pr-1 pointer-events-none select-none flex-shrink-0">
           <motion.div
-            animate={{ y: [0, -8, 0], rotate: [-8, 8, -8], scale: [1, 1.05, 1] }}
+            animate={{ y: [0, -6, 0], rotate: [-8, 8, -8], scale: [1, 1.05, 1] }}
             transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
-            className="w-8 h-8 sm:w-9 sm:h-9 bg-white/15 backdrop-blur-md rounded-xl border border-white/25 flex items-center justify-center shadow-sm text-emerald-100"
+            className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 bg-white/15 backdrop-blur-md rounded-lg sm:rounded-xl border border-white/25 flex items-center justify-center shadow-sm text-emerald-100"
           >
-            <DollarSign size={18} />
+            <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
           </motion.div>
 
           <motion.div
-            animate={{ y: [0, -10, 0], rotate: [6, -6, 6] }}
+            animate={{ y: [0, -8, 0], rotate: [6, -6, 6] }}
             transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
-            className="w-8 h-8 sm:w-9 sm:h-9 bg-white/15 backdrop-blur-md rounded-xl border border-white/25 flex items-center justify-center shadow-sm text-emerald-100"
+            className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 bg-white/15 backdrop-blur-md rounded-xl border border-white/25 flex items-center justify-center shadow-sm text-emerald-100"
           >
-            <Banknote size={18} />
+            <Banknote className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
           </motion.div>
 
           <motion.div
-            animate={{ y: [0, -6, 0], scale: [1, 1.15, 1] }}
+            animate={{ y: [0, -5, 0], scale: [1, 1.12, 1] }}
             transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
-            className="w-8 h-8 sm:w-9 sm:h-9 bg-white/25 backdrop-blur-md rounded-xl border border-white/35 flex items-center justify-center shadow-md font-black text-sm text-emerald-100"
+            className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 bg-white/25 backdrop-blur-md rounded-lg sm:rounded-xl border border-white/35 flex items-center justify-center shadow-md font-black text-xs sm:text-sm text-emerald-100"
           >
             $
           </motion.div>
 
           <motion.div
-            animate={{ y: [0, -9, 0], rotate: [-10, 10, -10] }}
+            animate={{ y: [0, -7, 0], rotate: [-10, 10, -10] }}
             transition={{ duration: 3.0, repeat: Infinity, ease: "easeInOut", delay: 0.9 }}
-            className="w-8 h-8 sm:w-9 sm:h-9 bg-white/15 backdrop-blur-md rounded-xl border border-white/25 flex items-center justify-center shadow-sm text-emerald-100 hidden sm:flex"
+            className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 bg-white/15 backdrop-blur-md rounded-lg sm:rounded-xl border border-white/25 items-center justify-center shadow-sm text-emerald-100 hidden xs:flex sm:flex"
           >
-            <Coins size={18} />
+            <Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
           </motion.div>
         </div>
       </div>

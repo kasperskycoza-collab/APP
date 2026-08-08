@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { formatCurrency as formatMoney } from '../utils';
+import { formatCurrency as formatMoney, getBoxValueClass, getMainValueClass } from '../utils';
 import { ArrowDown, ArrowUp, Plus, Search, Filter, Trash2, Edit2, List, AlignLeft, ChevronDown, Target, RefreshCw } from 'lucide-react';
 import { useStore } from '../store';
 import AddTransactionModal from './AddTransactionModal';
@@ -226,27 +226,27 @@ export default function Transactions() {
   };
 
   return (
-    <div className="pb-24 md:pb-8 space-y-6">
+    <div className="pb-24 md:pb-8 space-y-6 min-w-0 max-w-full overflow-x-hidden">
       {/* Top Green Banner Card - Identical in size, style & rounded edges to Dashboard */}
-      <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-xl relative z-10 overflow-hidden">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
+      <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white p-5 md:p-6 lg:p-8 rounded-2xl md:rounded-3xl shadow-xl relative z-10 overflow-hidden">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6">
+          <div className="min-w-0 flex-1">
             <div className="text-xs md:text-sm uppercase tracking-wider font-bold opacity-80 mb-1">Total Savings Balance</div>
-            <div className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight break-words">{formatCurrency(totalBalance)}</div>
+            <div className={getMainValueClass(formatCurrency(totalBalance))}>{formatCurrency(totalBalance)}</div>
             <div className="text-xs opacity-75 mt-2 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping"></span>
-              Live Cash Book Register
+              <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping flex-shrink-0"></span>
+              <span className="truncate">Live Cash Book Register</span>
             </div>
           </div>
           
-          <div className="flex gap-3 sm:gap-4 overflow-hidden w-full md:w-auto">
-            <div className="flex-1 md:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-4 border border-white/20 min-w-0">
+          <div className="flex gap-2.5 sm:gap-4 overflow-hidden w-full lg:w-auto">
+            <div className="flex-1 lg:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/20 min-w-0 flex flex-col justify-center">
               <div className="text-xs opacity-80 mb-1 font-medium truncate">Total Inflow</div>
-              <div className="text-lg sm:text-xl font-black text-emerald-200 break-words">+{formatCurrency(totalInflow)}</div>
+              <div className={`text-emerald-200 ${getBoxValueClass('+' + formatCurrency(totalInflow))}`}>+{formatCurrency(totalInflow)}</div>
             </div>
-            <div className="flex-1 md:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-4 border border-white/20 min-w-0">
+            <div className="flex-1 lg:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/20 min-w-0 flex flex-col justify-center">
               <div className="text-xs opacity-80 mb-1 font-medium truncate">Total Outflow</div>
-              <div className="text-lg sm:text-xl font-black text-red-200 break-words">-{formatCurrency(totalOutflow)}</div>
+              <div className={`text-red-200 ${getBoxValueClass('-' + formatCurrency(totalOutflow))}`}>-{formatCurrency(totalOutflow)}</div>
             </div>
           </div>
         </div>
@@ -363,7 +363,7 @@ export default function Transactions() {
         </div>
       </div>
 
-      <div className="p-5 md:p-0">
+      <div className="p-0">
         <div className="space-y-6">
           {viewMode === 'grouped' ? (
             Object.entries(groupedTransactions).map(([accountId, periodsMap]) => {
@@ -371,7 +371,7 @@ export default function Transactions() {
               const accountName = account ? account.name : 'Unknown Account';
               
               return (
-                <div key={accountId} className="space-y-4 mb-8 bg-slate-50 dark:bg-slate-800/30 p-4 rounded-xl border border-slate-100 dark:border-slate-800 mx-[-8px] sm:mx-0">
+                <div key={accountId} className="space-y-4 mb-8 bg-slate-50 dark:bg-slate-800/30 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                   <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 text-xl pb-2 border-b border-slate-200 dark:border-slate-700">
                     <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm"></span>
                     {accountName}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { formatCurrency as formatMoney } from '../utils';
+import { formatCurrency as formatMoney, getMainValueClass } from '../utils';
 import { useStore } from '../store';
 import { Target, Plus, Edit2, Trash2, PlusCircle, Sparkles, Trophy } from 'lucide-react';
 import AddGoalModal from './AddGoalModal';
@@ -47,35 +47,22 @@ export default function Goals() {
 
   return (
     <div className="pb-24 md:pb-8 space-y-6">
-      {/* Mobile top bar (Previous Edition) */}
-      <div className="md:hidden bg-gradient-to-br from-emerald-600 to-emerald-800 text-white p-5 sticky top-0 z-10 shadow-md -mx-5 -mt-5 mb-4">
-        <div className="flex justify-between items-center">
-          <div className="text-xl font-bold flex items-center gap-2">Savings Goals</div>
-          <button 
-            onClick={() => setIsAddOpen(true)}
-            className="w-10 h-10 rounded-full bg-black/10 dark:bg-slate-800/20 flex items-center justify-center backdrop-blur-sm transition-transform active:scale-95 text-white"
-          >
-            <Plus size={20} />
-          </button>
-        </div>
-      </div>
-
-      {/* Desktop Banner Card (Today's Edition) */}
-      <div className="hidden md:block bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-xl relative z-10 overflow-hidden">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
+      {/* Banner Card - Identical in style & rounded edges to Dashboard & Cash Book */}
+      <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white p-5 md:p-6 lg:p-8 rounded-2xl md:rounded-3xl shadow-xl relative z-10 overflow-hidden">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
+          <div className="min-w-0 flex-1">
             <div className="text-xs md:text-sm uppercase tracking-wider font-bold opacity-80 mb-1">Total Goals Savings Target</div>
-            <div className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight break-words">{formatCurrency(totalGoalCurrent)}</div>
+            <div className={getMainValueClass(formatCurrency(totalGoalCurrent))}>{formatCurrency(totalGoalCurrent)}</div>
             <div className="text-xs opacity-75 mt-2 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping"></span>
-              Target Progress: {totalGoalTarget > 0 ? Math.round((totalGoalCurrent / totalGoalTarget) * 100) : 0}% ({formatCurrency(totalGoalTarget)} total target)
+              <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping flex-shrink-0"></span>
+              <span className="truncate">Target Progress: {totalGoalTarget > 0 ? Math.round((totalGoalCurrent / totalGoalTarget) * 100) : 0}% ({formatCurrency(totalGoalTarget)} total target)</span>
             </div>
           </div>
           
           <div className="flex gap-3 sm:gap-4 overflow-hidden w-full md:w-auto items-center">
             <button 
               onClick={() => setIsAddOpen(true)}
-              className="px-6 py-3.5 rounded-2xl bg-white text-emerald-800 hover:bg-emerald-50 font-extrabold text-sm shadow-md flex items-center justify-center gap-2 transition-transform active:scale-95 w-full md:w-auto"
+              className="px-5 py-3 lg:px-6 lg:py-3.5 rounded-2xl bg-white text-emerald-800 hover:bg-emerald-50 font-extrabold text-sm shadow-md flex items-center justify-center gap-2 transition-transform active:scale-95 w-full md:w-auto"
             >
               <Plus size={20} /> Add Savings Goal
             </button>
@@ -83,7 +70,7 @@ export default function Goals() {
         </div>
       </div>
 
-      <div className="p-5 md:p-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[...goals]
           .sort((a, b) => new Date(b.deadline).getTime() - new Date(a.deadline).getTime())
           .map(goal => {
