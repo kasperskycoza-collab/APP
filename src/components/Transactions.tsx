@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { formatCurrency as formatMoney, getBoxValueClass, getMainValueClass } from '../utils';
-import { ArrowDown, ArrowUp, Plus, Search, Filter, Trash2, Edit2, List, AlignLeft, ChevronDown, Target, RefreshCw } from 'lucide-react';
+import { ArrowDown, ArrowUp, Plus, Search, Filter, Trash2, Edit2, List, AlignLeft, ChevronDown, Target, RefreshCw, RotateCw, CheckCircle2, X } from 'lucide-react';
 import { useStore } from '../store';
 import AddTransactionModal from './AddTransactionModal';
 import EditTransactionModal from './EditTransactionModal';
@@ -37,7 +37,7 @@ const getPeriodKey = (dateString: string, groupBy: TimeGroup) => {
 };
 
 export default function Transactions() {
-  const { transactions, currency, deleteTransaction, accounts, goals } = useStore();
+  const { transactions, currency, deleteTransaction, repeatTransaction, accounts, goals } = useStore();
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
   const [sortBy, setSortBy] = useState<SortOption>('date_desc');
@@ -47,6 +47,15 @@ export default function Transactions() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deletingTransactionId, setDeletingTransactionId] = useState<number | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [repeatToast, setRepeatToast] = useState<string | null>(null);
+
+  const handleRepeat = (t: Transaction) => {
+    repeatTransaction(t.id);
+    setRepeatToast(`Repeated "${t.description || 'Transaction'}" for today!`);
+    setTimeout(() => {
+      setRepeatToast(null);
+    }, 3000);
+  };
 
   const transactionNetBalances = useMemo(() => {
     // Sort all transactions chronologically (oldest to newest) to compute historical running balance correctly
@@ -200,16 +209,26 @@ export default function Transactions() {
             </div>
             <div className="flex gap-1">
               <button 
+                onClick={(e) => { e.stopPropagation(); handleRepeat(t); }}
+                className="text-slate-400 hover:text-purple-600 transition-colors p-1 rounded-md hover:bg-purple-50 dark:hover:bg-purple-900/30"
+                aria-label="Repeat transaction"
+                title="Repeat / Duplicate Transaction"
+              >
+                <RotateCw size={14} />
+              </button>
+              <button 
                 onClick={(e) => { e.stopPropagation(); setEditingTransaction(t); }}
-                className="text-slate-400 hover:text-blue-500 transition-colors p-1 rounded-md hover:bg-blue-50 dark:bg-blue-900/30"
+                className="text-slate-400 hover:text-blue-500 transition-colors p-1 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30"
                 aria-label="Edit transaction"
+                title="Edit Transaction"
               >
                 <Edit2 size={14} />
               </button>
               <button 
                 onClick={(e) => { e.stopPropagation(); handleDelete(t.id); }}
-                className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50 dark:bg-red-900/30"
+                className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/30"
                 aria-label="Delete transaction"
+                title="Delete Transaction"
               >
                 <Trash2 size={14} />
               </button>
@@ -227,26 +246,39 @@ export default function Transactions() {
 
   return (
     <div className="pb-24 md:pb-8 space-y-6 min-w-0 max-w-full overflow-x-hidden">
+      {/* Toast notification for repeat action */}
+      {repeatToast && (
+        <div className="p-3 bg-purple-600 text-white rounded-xl shadow-lg font-bold text-xs md:text-sm flex items-center justify-between gap-2 animate-in fade-in slide-in-from-top-3">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={18} />
+            <span>{repeatToast}</span>
+          </div>
+          <button onClick={() => setRepeatToast(null)} className="opacity-80 hover:opacity-100 p-1">
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       {/* Top Green Banner Card - Identical in size, style & rounded edges to Dashboard */}
       <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white p-5 md:p-6 lg:p-8 rounded-2xl md:rounded-3xl shadow-xl relative z-10 overflow-hidden">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6">
-          <div className="min-w-0 flex-1">
-            <div className="text-xs md:text-sm uppercase tracking-wider font-bold opacity-80 mb-1">Total Savings Balance</div>
-            <div className={getMainValueClass(formatCurrency(totalBalance))}>{formatCurrency(totalBalance)}</div>
+          <div className="min-w-0 max-w-full flex-1 shrink pr-0 lg:pr-2 overflow-hidden">
+            <div className="text-xs md:text-sm uppercase tracking-wider font-bold opacity-80 mb-1 truncate">Total Savings Balance</div>
+            <div className={getMainValueClass(formatCurrency(totalBalance))} title={formatCurrency(totalBalance)}>{formatCurrency(totalBalance)}</div>
             <div className="text-xs opacity-75 mt-2 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping flex-shrink-0"></span>
               <span className="truncate">Live Cash Book Register</span>
             </div>
           </div>
           
-          <div className="flex gap-2.5 sm:gap-4 overflow-hidden w-full lg:w-auto">
-            <div className="flex-1 lg:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/20 min-w-0 flex flex-col justify-center">
+          <div className="flex gap-2.5 sm:gap-4 overflow-hidden w-full lg:w-auto shrink-0">
+            <div className="flex-1 lg:w-44 xl:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/20 min-w-0 flex flex-col justify-center">
               <div className="text-xs opacity-80 mb-1 font-medium truncate">Total Inflow</div>
-              <div className={`text-emerald-200 ${getBoxValueClass('+' + formatCurrency(totalInflow))}`}>+{formatCurrency(totalInflow)}</div>
+              <div className={`text-emerald-200 ${getBoxValueClass('+' + formatCurrency(totalInflow))}`} title={'+' + formatCurrency(totalInflow)}>+{formatCurrency(totalInflow)}</div>
             </div>
-            <div className="flex-1 lg:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/20 min-w-0 flex flex-col justify-center">
+            <div className="flex-1 lg:w-44 xl:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/20 min-w-0 flex flex-col justify-center">
               <div className="text-xs opacity-80 mb-1 font-medium truncate">Total Outflow</div>
-              <div className={`text-red-200 ${getBoxValueClass('-' + formatCurrency(totalOutflow))}`}>-{formatCurrency(totalOutflow)}</div>
+              <div className={`text-red-200 ${getBoxValueClass('-' + formatCurrency(totalOutflow))}`} title={'-' + formatCurrency(totalOutflow)}>-{formatCurrency(totalOutflow)}</div>
             </div>
           </div>
         </div>
@@ -281,46 +313,46 @@ export default function Transactions() {
         </div>
 
         {/* Adjustments Form Controls Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-          {/* Transaction Type Filter */}
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+          {/* Transaction Type Filter - Full Row in Tablet Horizontal */}
+          <div className="md:col-span-2">
             <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
               Type Filter
             </label>
-            <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+            <div className="grid grid-cols-3 gap-2 bg-slate-100 dark:bg-slate-900 p-2 rounded-xl border border-slate-200/60 dark:border-slate-700/60 min-h-[48px] items-center w-full">
               {(['all', 'income', 'expense'] as const).map(type => (
                 <button
                   key={type}
                   onClick={() => setFilterType(type)}
-                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg capitalize transition-all ${
+                  className={`w-full py-2.5 px-3 text-xs sm:text-sm font-extrabold capitalize transition-all text-center whitespace-nowrap flex items-center justify-center rounded-lg cursor-pointer ${
                     filterType === type 
                       ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-200/50 dark:border-slate-700' 
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                 >
-                  {type}
+                  {type === 'all' ? 'All Types' : type}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* View Mode Layout */}
-          <div>
+          {/* View Mode Layout - Full Row in Tablet Horizontal */}
+          <div className="md:col-span-2">
             <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
               Layout View
             </label>
-            <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+            <div className="grid grid-cols-3 gap-2 bg-slate-100 dark:bg-slate-900 p-2 rounded-xl border border-slate-200/60 dark:border-slate-700/60 min-h-[48px] items-center w-full">
               {(['grouped', 'list', 'details'] as const).map(mode => (
                 <button
                   key={mode}
                   onClick={() => setViewMode(mode)}
-                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg capitalize transition-all ${
+                  className={`w-full py-2.5 px-3 text-xs sm:text-sm font-extrabold capitalize transition-all text-center whitespace-nowrap flex items-center justify-center rounded-lg cursor-pointer ${
                     viewMode === mode 
                       ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-200/50 dark:border-slate-700' 
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                 >
-                  {mode}
+                  {mode === 'grouped' ? 'Grouped View' : mode === 'list' ? 'List View' : 'Detailed View'}
                 </button>
               ))}
             </div>

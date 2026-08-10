@@ -13,6 +13,7 @@ export default defineConfig(() => {
         registerType: 'autoUpdate',
         injectRegister: 'auto',
         workbox: {
+          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,ttf}'],
           runtimeCaching: [
             {
@@ -79,5 +80,28 @@ export default defineConfig(() => {
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
+    build: {
+      chunkSizeWarningLimit: 1500,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('jspdf') || id.includes('html2canvas')) {
+                return 'pdf-vendor';
+              }
+              if (id.includes('recharts') || id.includes('d3-')) {
+                return 'charts-vendor';
+              }
+              if (id.includes('firebase')) {
+                return 'firebase-vendor';
+              }
+              if (id.includes('lucide-react')) {
+                return 'icons-vendor';
+              }
+            }
+          }
+        }
+      }
+    }
   };
 });

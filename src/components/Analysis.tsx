@@ -1,9 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { formatCurrency as formatMoney, getBoxValueClass, getMainValueClass } from '../utils';
 import { useStore } from '../store';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Sector } from 'recharts';
 import { Filter, Download, PieChart as PieChartIcon, Wallet, TrendingUp, FileText } from 'lucide-react';
 import ExportPdfModal from './ExportPdfModal';
+
+const PieAny = Pie as any;
 
 export default function Analysis() {
   const { transactions, currency, accounts } = useStore();
@@ -11,6 +13,44 @@ export default function Analysis() {
   const [activeAccount, setActiveAccount] = useState<string>('all');
   const [activePieIndex, setActivePieIndex] = useState<number>(0);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [selectedBar, setSelectedBar] = useState<{ index: number; dataKey: 'income' | 'expense' } | null>(null);
+
+  useEffect(() => {
+    setSelectedBar(null);
+  }, [period, activeAccount]);
+
+  const renderZoomBarShape = (props: any, isSelected: boolean) => {
+    const { fill, x, y, width, height, radius } = props;
+    if (!width || !height || height <= 0) return null;
+
+    const rx = Array.isArray(radius) ? radius[0] : (radius || 6);
+    const scaleX = isSelected ? 1.18 : 1;
+    const scaleY = isSelected ? 1.12 : 1;
+    
+    const scaledWidth = width * scaleX;
+    const scaledHeight = height * scaleY;
+    const dx = (width - scaledWidth) / 2;
+    const dy = height - scaledHeight;
+
+    return (
+      <rect
+        x={x + dx}
+        y={y + dy}
+        width={scaledWidth}
+        height={scaledHeight}
+        fill={fill}
+        rx={rx}
+        ry={rx}
+        className={`transition-all duration-300 ease-out cursor-pointer ${
+          isSelected ? 'filter drop-shadow-lg brightness-110' : 'hover:opacity-95'
+        }`}
+        style={{
+          outline: 'none',
+          WebkitTapHighlightColor: 'transparent',
+        }}
+      />
+    );
+  };
 
   const formatCurrency = (amount: number) => {
     return formatMoney(amount, currency, 0);
@@ -47,17 +87,91 @@ export default function Analysis() {
 
   const COLORS = ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#6b7280'];
 
+  const parseTxDate = (dateStr: string): Date => {
+    if (!dateStr) return new Date();
+    if (dateStr.includes('T')) {
+      const d = new Date(dateStr);
+      if (!isNaN(d.getTime())) return d;
+    }
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+        return new Date(year, month, day);
+      }
+    }
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? new Date() : d;
+  };
+
+  const isSameDay = (d1: Date, d2: Date) => {
+    return (
+      d1.getFullYear() === d2.getFullYear() &&
+      d1.getMonth() === d2.getMonth() &&
+      d1.getDate() === d2.getDate()
+    );
+  };
+
+  const refDate = useMemo(() => {
+    if (!transactions.length) return new Date();
+    const now = new Date();
+    const hasTxInCurrentYear = transactions.some(t => parseTxDate(t.date).getFullYear() === now.getFullYear());
+    if (hasTxInCurrentYear) return now;
+
+    let maxTime = 0;
+    transactions.forEach(t => {
+      const time = parseTxDate(t.date).getTime();
+      if (time > maxTime) maxTime = time;
+    });
+    return maxTime > 0 ? new Date(maxTime) : now;
+  }, [transactions]);
+
   const filteredTransactions = useMemo(() => {
-    return transactions.filter(t => activeAccount === 'all' || (t.account || 'default') === activeAccount);
-  }, [transactions, activeAccount]);
+    return transactions.filter(t => {
+      if (activeAccount !== 'all' && (t.account || 'default') !== activeAccount) {
+        return false;
+      }
+
+      const txDate = parseTxDate(t.date);
+
+      if (period === 'daily') {
+        return isSameDay(txDate, refDate);
+      }
+
+      if (period === 'weekly') {
+        const startOfWeek = new Date(refDate);
+        const dayOfWeek = refDate.getDay();
+        const diffToMon = refDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+        startOfWeek.setDate(diffToMon);
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        endOfWeek.setHours(23, 59, 59, 999);
+
+        return txDate >= startOfWeek && txDate <= endOfWeek;
+      }
+
+      if (period === 'monthly') {
+        return txDate.getFullYear() === refDate.getFullYear() && txDate.getMonth() === refDate.getMonth();
+      }
+
+      if (period === 'yearly') {
+        return txDate.getFullYear() === refDate.getFullYear();
+      }
+
+      return true;
+    });
+  }, [transactions, activeAccount, period, refDate]);
 
   const stats = useMemo(() => {
-    // Basic filter logic (mocked for simplicity, in real app filter by period dates)
     const income = filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
     const expense = filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
     const net = income - expense;
     return { income, expense, net, count: filteredTransactions.length };
-  }, [filteredTransactions, period]);
+  }, [filteredTransactions]);
 
   const accountBalances = useMemo(() => {
     const balances: Record<string, { income: number; expense: number; net: number }> = {};
@@ -97,24 +211,105 @@ export default function Analysis() {
     return Object.entries(categories)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
-  }, [filteredTransactions, period]);
+  }, [filteredTransactions]);
 
   const barChartData = useMemo(() => {
-    // Generate simple last 7 items or mocked dates
-    // In a real scenario, this aggregates correctly by date
-    const grouped: Record<string, { income: number, expense: number }> = {};
-    const recentTx = [...filteredTransactions].reverse().slice(0, 50); // Get latest for display
-    recentTx.forEach(t => {
-      const dateKey = new Date(t.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-      if (!grouped[dateKey]) grouped[dateKey] = { income: 0, expense: 0 };
-      if (t.type === 'income') grouped[dateKey].income += t.amount;
-      else grouped[dateKey].expense += t.amount;
-    });
-    
-    return Object.entries(grouped)
-      .map(([date, data]) => ({ date, ...data }))
-      .slice(-7); // Last 7 periods
-  }, [transactions, period]);
+    const accountTx = transactions.filter(t => activeAccount === 'all' || (t.account || 'default') === activeAccount);
+
+    if (period === 'daily') {
+      const result: { date: string; income: number; expense: number }[] = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(refDate);
+        d.setDate(refDate.getDate() - i);
+        const label = i === 0 ? 'Today' : d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' });
+        
+        let dayIncome = 0;
+        let dayExpense = 0;
+        accountTx.forEach(t => {
+          const txDate = parseTxDate(t.date);
+          if (isSameDay(txDate, d)) {
+            if (t.type === 'income') dayIncome += t.amount;
+            else dayExpense += t.amount;
+          }
+        });
+        result.push({ date: label, income: dayIncome, expense: dayExpense });
+      }
+      return result;
+    }
+
+    if (period === 'weekly') {
+      const startOfWeek = new Date(refDate);
+      const dayOfWeek = refDate.getDay();
+      const diffToMon = refDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      startOfWeek.setDate(diffToMon);
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      const result: { date: string; income: number; expense: number }[] = [];
+      const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(startOfWeek);
+        d.setDate(startOfWeek.getDate() + i);
+        const label = `${dayNames[i]} ${d.getDate()}`;
+
+        let dayIncome = 0;
+        let dayExpense = 0;
+        accountTx.forEach(t => {
+          const txDate = parseTxDate(t.date);
+          if (isSameDay(txDate, d)) {
+            if (t.type === 'income') dayIncome += t.amount;
+            else dayExpense += t.amount;
+          }
+        });
+        result.push({ date: label, income: dayIncome, expense: dayExpense });
+      }
+      return result;
+    }
+
+    if (period === 'monthly') {
+      const result = [
+        { date: 'W1 (1-7)', weekStart: 1, weekEnd: 7, income: 0, expense: 0 },
+        { date: 'W2 (8-14)', weekStart: 8, weekEnd: 14, income: 0, expense: 0 },
+        { date: 'W3 (15-21)', weekStart: 15, weekEnd: 21, income: 0, expense: 0 },
+        { date: 'W4 (22-28)', weekStart: 22, weekEnd: 28, income: 0, expense: 0 },
+        { date: 'W5 (29+)', weekStart: 29, weekEnd: 31, income: 0, expense: 0 },
+      ];
+
+      accountTx.forEach(t => {
+        const txDate = parseTxDate(t.date);
+        if (txDate.getFullYear() === refDate.getFullYear() && txDate.getMonth() === refDate.getMonth()) {
+          const dateNum = txDate.getDate();
+          const weekObj = result.find(w => dateNum >= w.weekStart && dateNum <= w.weekEnd);
+          if (weekObj) {
+            if (t.type === 'income') weekObj.income += t.amount;
+            else weekObj.expense += t.amount;
+          }
+        }
+      });
+
+      return result.map(({ date, income, expense }) => ({ date, income, expense }));
+    }
+
+    if (period === 'yearly') {
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const result = monthNames.map((m, idx) => ({ date: m, monthIdx: idx, income: 0, expense: 0 }));
+
+      accountTx.forEach(t => {
+        const txDate = parseTxDate(t.date);
+        if (txDate.getFullYear() === refDate.getFullYear()) {
+          const mIdx = txDate.getMonth();
+          if (result[mIdx]) {
+            if (t.type === 'income') result[mIdx].income += t.amount;
+            else result[mIdx].expense += t.amount;
+          }
+        }
+      });
+
+      return result.map(({ date, income, expense }) => ({ date, income, expense }));
+    }
+
+    return [];
+  }, [transactions, activeAccount, period, refDate]);
 
   const renderActiveShape = (props: any) => {
     const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
@@ -156,23 +351,23 @@ export default function Analysis() {
       {/* Top Green Banner Card - Identical in size, style & rounded edges to Dashboard & Cash Book */}
       <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white p-5 md:p-6 lg:p-8 rounded-2xl md:rounded-3xl shadow-xl relative z-10 overflow-hidden">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6">
-          <div className="min-w-0 flex-1">
-            <div className="text-xs md:text-sm uppercase tracking-wider font-bold opacity-80 mb-1">Total Net Savings Balance</div>
-            <div className={getMainValueClass(formatCurrency(totalBalance))}>{formatCurrency(totalBalance)}</div>
+          <div className="min-w-0 max-w-full flex-1 shrink pr-0 lg:pr-2 overflow-hidden">
+            <div className="text-xs md:text-sm uppercase tracking-wider font-bold opacity-80 mb-1 truncate">Total Net Savings Balance</div>
+            <div className={getMainValueClass(formatCurrency(totalBalance))} title={formatCurrency(totalBalance)}>{formatCurrency(totalBalance)}</div>
             <div className="text-xs opacity-75 mt-2 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping flex-shrink-0"></span>
               <span className="truncate">Audit & Analytics Audit Register</span>
             </div>
           </div>
           
-          <div className="flex gap-2.5 sm:gap-4 overflow-hidden w-full lg:w-auto">
-            <div className="flex-1 lg:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/20 min-w-0 flex flex-col justify-center">
+          <div className="flex gap-2.5 sm:gap-4 overflow-hidden w-full lg:w-auto shrink-0">
+            <div className="flex-1 lg:w-44 xl:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/20 min-w-0 flex flex-col justify-center">
               <div className="text-xs opacity-80 mb-1 font-medium truncate">Total Income</div>
-              <div className={`text-emerald-200 ${getBoxValueClass('+' + formatCurrency(stats.income))}`}>+{formatCurrency(stats.income)}</div>
+              <div className={`text-emerald-200 ${getBoxValueClass('+' + formatCurrency(stats.income))}`} title={'+' + formatCurrency(stats.income)}>+{formatCurrency(stats.income)}</div>
             </div>
-            <div className="flex-1 lg:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/20 min-w-0 flex flex-col justify-center">
+            <div className="flex-1 lg:w-44 xl:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/20 min-w-0 flex flex-col justify-center">
               <div className="text-xs opacity-80 mb-1 font-medium truncate">Total Expenses</div>
-              <div className={`text-red-200 ${getBoxValueClass('-' + formatCurrency(stats.expense))}`}>-{formatCurrency(stats.expense)}</div>
+              <div className={`text-red-200 ${getBoxValueClass('-' + formatCurrency(stats.expense))}`} title={'-' + formatCurrency(stats.expense)}>-{formatCurrency(stats.expense)}</div>
             </div>
           </div>
         </div>
@@ -180,22 +375,22 @@ export default function Analysis() {
 
       {/* Structured Audit Controls & Adjustments Panel */}
       <div className="bg-white dark:bg-slate-800 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-5">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-700/60">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-700/60">
           <div className="flex items-center gap-2">
             <Filter className="text-emerald-600 dark:text-emerald-400" size={20} />
             <h3 className="font-extrabold text-base text-slate-800 dark:text-slate-100">Audit Adjustments & Scope Controls</h3>
           </div>
           
-          <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+          <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
             <button 
               onClick={() => setIsPdfModalOpen(true)} 
-              className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs md:text-sm shadow-md flex items-center justify-center gap-2 transition-transform active:scale-95"
+              className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs md:text-sm shadow-md flex items-center justify-center gap-2 transition-transform active:scale-95 cursor-pointer"
             >
               <FileText size={16} /> Export Audit PDF
             </button>
             <button 
               onClick={handleExportCSV} 
-              className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs md:text-sm border border-slate-200 dark:border-slate-600 flex items-center justify-center gap-2 transition-transform active:scale-95"
+              className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs md:text-sm border border-slate-200 dark:border-slate-600 flex items-center justify-center gap-2 transition-transform active:scale-95 cursor-pointer"
             >
               <Download size={16} /> Export CSV
             </button>
@@ -203,7 +398,7 @@ export default function Analysis() {
         </div>
 
         {/* Adjustments Form Controls Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
           {/* Account Filter */}
           <div>
             <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
@@ -221,17 +416,17 @@ export default function Analysis() {
             </select>
           </div>
 
-          {/* Timeframe Interval */}
-          <div>
+          {/* Timeframe Interval - Expanded on Tablet Horizontal */}
+          <div className="md:col-span-2 lg:col-span-2">
             <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
               Analysis Period
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 bg-slate-100 dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-100 dark:bg-slate-900 p-2 rounded-xl border border-slate-200/60 dark:border-slate-700/60 min-h-[48px] items-center">
               {['daily', 'weekly', 'monthly', 'yearly'].map(p => (
                 <button
                   key={p}
                   onClick={() => setPeriod(p)}
-                  className={`w-full py-1.5 px-2 text-xs font-bold rounded-lg capitalize transition-all text-center truncate ${
+                  className={`w-full py-2.5 px-3 text-xs sm:text-sm font-extrabold capitalize transition-all text-center whitespace-nowrap flex items-center justify-center rounded-lg cursor-pointer ${
                     period === p 
                       ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-200/50 dark:border-slate-700' 
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
@@ -338,7 +533,7 @@ export default function Analysis() {
               <div className="h-64 sm:h-72 w-full relative">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie
+                    <PieAny
                       activeIndex={activePieIndex}
                       activeShape={renderActiveShape}
                       data={expenseBreakdown}
@@ -348,8 +543,8 @@ export default function Analysis() {
                       outerRadius={85}
                       paddingAngle={4}
                       dataKey="value"
-                      onMouseEnter={(_, index) => setActivePieIndex(index)}
-                      onClick={(_, index) => setActivePieIndex(index)}
+                      onMouseEnter={(_: any, index: number) => setActivePieIndex(index)}
+                      onClick={(_: any, index: number) => setActivePieIndex(index)}
                     >
                       {expenseBreakdown.map((entry, index) => (
                         <Cell 
@@ -358,7 +553,7 @@ export default function Analysis() {
                           className="transition-all duration-300 cursor-pointer"
                         />
                       ))}
-                    </Pie>
+                    </PieAny>
                     <Tooltip 
                       formatter={(value: number) => formatCurrency(value)}
                       contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', color: '#0f172a', boxShadow: '0 4px 12px -2px rgb(0 0 0 / 0.1)' }}
@@ -405,31 +600,59 @@ export default function Analysis() {
           )}
         </div>
 
-        <div className="bg-white dark:bg-slate-800 md:bg-emerald-50/70 md:dark:bg-slate-800 text-slate-800 dark:text-slate-100 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 md:border-emerald-200/80 md:dark:border-slate-700 shadow-sm flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="font-extrabold text-base md:text-lg flex items-center gap-2 text-slate-800 dark:text-slate-100">
-              <TrendingUp size={20} className="text-emerald-600 dark:text-emerald-400" />
-              Cash Flow Trend Audit
+        <div className="bg-white dark:bg-slate-800 md:bg-emerald-50/70 md:dark:bg-slate-800 text-slate-800 dark:text-slate-100 p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-700 md:border-emerald-200/80 md:dark:border-slate-700 shadow-sm flex flex-col justify-between min-w-0">
+          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 mb-4 sm:mb-6">
+            <h2 className="font-extrabold text-sm sm:text-base lg:text-lg flex items-center gap-2 text-slate-800 dark:text-slate-100 min-w-0">
+              <TrendingUp size={18} className="text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+              <span className="truncate">Cash Flow Trend Audit</span>
             </h2>
-            <div className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/60 px-3 py-1 rounded-full">
+            <div className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/60 px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0">
               Period Register
             </div>
           </div>
           {barChartData.length > 0 ? (
             <div className="w-full">
-              <div style={{ width: '100%', height: 220 }} className="mb-4">
+              <div style={{ width: '100%', height: 220 }} className="mb-4 select-none [&_*]:focus:outline-none [&_*]:focus:ring-0 [-webkit-tap-highlight-color:transparent]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={barChartData} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
+                  <BarChart data={barChartData} margin={{ top: 20, right: 10, left: 0, bottom: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(value) => formatCurrency(value)} width={80} />
+                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} tickFormatter={(value) => formatCurrency(value)} width={70} />
                     <Tooltip 
                       formatter={(value: number) => formatCurrency(value)}
                       contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', color: '#0f172a', boxShadow: '0 4px 12px -2px rgb(0 0 0 / 0.1)' }}
                       cursor={false}
                     />
-                    <Bar dataKey="income" name="Income" fill="#10b981" radius={[6, 6, 0, 0]} maxBarSize={50} />
-                    <Bar dataKey="expense" name="Expense" fill="#ef4444" radius={[6, 6, 0, 0]} maxBarSize={50} />
+                    <Bar 
+                      dataKey="income" 
+                      name="Income" 
+                      fill="#10b981" 
+                      radius={[6, 6, 0, 0]} 
+                      maxBarSize={45} 
+                      activeBar={false}
+                      onClick={(_, index) => {
+                        setSelectedBar(prev => (prev?.index === index && prev?.dataKey === 'income' ? null : { index, dataKey: 'income' }));
+                      }}
+                      shape={(props: any) => {
+                        const isSelected = selectedBar?.index === props.index && selectedBar?.dataKey === 'income';
+                        return renderZoomBarShape(props, isSelected);
+                      }}
+                    />
+                    <Bar 
+                      dataKey="expense" 
+                      name="Expense" 
+                      fill="#ef4444" 
+                      radius={[6, 6, 0, 0]} 
+                      maxBarSize={45} 
+                      activeBar={false}
+                      onClick={(_, index) => {
+                        setSelectedBar(prev => (prev?.index === index && prev?.dataKey === 'expense' ? null : { index, dataKey: 'expense' }));
+                      }}
+                      shape={(props: any) => {
+                        const isSelected = selectedBar?.index === props.index && selectedBar?.dataKey === 'expense';
+                        return renderZoomBarShape(props, isSelected);
+                      }}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -437,41 +660,41 @@ export default function Analysis() {
               {/* Bottom Summary & Legend Badges with Corresponding Colors */}
               <div className="pt-3.5 border-t border-slate-200/60 dark:border-slate-700/60 grid grid-cols-3 gap-1.5 sm:gap-3 items-center w-full">
                 {/* Amount In Badge */}
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1.5 py-2 sm:px-3 sm:py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 shadow-sm min-w-0 text-center">
+                <div className="flex flex-col xl:flex-row items-center justify-center gap-0.5 xl:gap-1.5 px-1 py-2 sm:px-2.5 sm:py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 shadow-sm min-w-0 text-center">
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
                     <span className="text-[10px] sm:text-xs font-bold text-emerald-800 dark:text-emerald-300">
-                      In<span className="hidden sm:inline">come</span>:
+                      In<span className="hidden xl:inline">come</span>:
                     </span>
                   </div>
-                  <span className="font-black text-emerald-600 dark:text-emerald-400 text-[10px] xs:text-xs sm:text-sm whitespace-nowrap">
+                  <span className="font-black text-emerald-600 dark:text-emerald-400 text-[10px] sm:text-xs xl:text-sm whitespace-nowrap truncate max-w-full">
                     +{formatCurrency(stats.income)}
                   </span>
                 </div>
 
                 {/* Amount Out Badge */}
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1.5 py-2 sm:px-3 sm:py-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200/80 dark:border-red-800/60 shadow-sm min-w-0 text-center">
+                <div className="flex flex-col xl:flex-row items-center justify-center gap-0.5 xl:gap-1.5 px-1 py-2 sm:px-2.5 sm:py-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200/80 dark:border-red-800/60 shadow-sm min-w-0 text-center">
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-red-500 flex-shrink-0 animate-pulse"></span>
+                    <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0 animate-pulse"></span>
                     <span className="text-[10px] sm:text-xs font-bold text-red-800 dark:text-red-300">
-                      Out<span className="hidden sm:inline">go</span>:
+                      Out<span className="hidden xl:inline">go</span>:
                     </span>
                   </div>
-                  <span className="font-black text-red-600 dark:text-red-400 text-[10px] xs:text-xs sm:text-sm whitespace-nowrap">
+                  <span className="font-black text-red-600 dark:text-red-400 text-[10px] sm:text-xs xl:text-sm whitespace-nowrap truncate max-w-full">
                     -{formatCurrency(stats.expense)}
                   </span>
                 </div>
 
                 {/* Net Flow Balance Badge */}
-                <div className={`flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1.5 py-2 sm:px-3 sm:py-2.5 rounded-xl border text-center shadow-sm min-w-0 ${
+                <div className={`flex flex-col xl:flex-row items-center justify-center gap-0.5 xl:gap-1.5 px-1 py-2 sm:px-2.5 sm:py-2.5 rounded-xl border text-center shadow-sm min-w-0 ${
                   stats.net >= 0 
                     ? 'bg-emerald-100/80 dark:bg-emerald-900/50 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200' 
                     : 'bg-red-100/80 dark:bg-red-900/50 border-red-300 dark:border-red-700 text-red-800 dark:text-red-200'
                 }`}>
                   <span className="text-[10px] sm:text-xs font-bold opacity-90 flex-shrink-0">
-                    Net<span className="hidden sm:inline"> Flow</span>:
+                    Net<span className="hidden xl:inline"> Flow</span>:
                   </span>
-                  <span className="font-black text-[10px] xs:text-xs sm:text-sm whitespace-nowrap">
+                  <span className="font-black text-[10px] sm:text-xs xl:text-sm whitespace-nowrap truncate max-w-full">
                     {stats.net >= 0 ? '+' : ''}{formatCurrency(stats.net)}
                   </span>
                 </div>

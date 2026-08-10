@@ -21,6 +21,40 @@ export default function Dashboard() {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deletingTransactionId, setDeletingTransactionId] = useState<number | null>(null);
+  const [selectedBar, setSelectedBar] = useState<{ index: number; dataKey: 'income' | 'expense' } | null>(null);
+
+  const renderZoomBarShape = (props: any, isSelected: boolean) => {
+    const { fill, x, y, width, height, radius } = props;
+    if (!width || !height || height <= 0) return null;
+
+    const rx = Array.isArray(radius) ? radius[0] : (radius || 6);
+    const scaleX = isSelected ? 1.18 : 1;
+    const scaleY = isSelected ? 1.12 : 1;
+    
+    const scaledWidth = width * scaleX;
+    const scaledHeight = height * scaleY;
+    const dx = (width - scaledWidth) / 2;
+    const dy = height - scaledHeight;
+
+    return (
+      <rect
+        x={x + dx}
+        y={y + dy}
+        width={scaledWidth}
+        height={scaledHeight}
+        fill={fill}
+        rx={rx}
+        ry={rx}
+        className={`transition-all duration-300 ease-out cursor-pointer ${
+          isSelected ? 'filter drop-shadow-lg brightness-110' : 'hover:opacity-95'
+        }`}
+        style={{
+          outline: 'none',
+          WebkitTapHighlightColor: 'transparent',
+        }}
+      />
+    );
+  };
 
   const handleDelete = (id: number) => {
     setDeletingTransactionId(id);
@@ -105,23 +139,23 @@ export default function Dashboard() {
       {/* Top Total Balance & Today's Summary Card */}
       <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white p-5 md:p-6 lg:p-8 rounded-2xl md:rounded-3xl shadow-xl relative z-10 overflow-hidden">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6">
-          <div className="min-w-0 flex-1">
-            <div className="text-xs md:text-sm uppercase tracking-wider font-bold opacity-80 mb-1">Total Savings Balance</div>
-            <div className={getMainValueClass(formatCurrency(totalBalance))}>{formatCurrency(totalBalance)}</div>
+          <div className="min-w-0 max-w-full flex-1 shrink pr-0 lg:pr-2 overflow-hidden">
+            <div className="text-xs md:text-sm uppercase tracking-wider font-bold opacity-80 mb-1 truncate">Total Savings Balance</div>
+            <div className={getMainValueClass(formatCurrency(totalBalance))} title={formatCurrency(totalBalance)}>{formatCurrency(totalBalance)}</div>
             <div className="text-xs opacity-75 mt-2 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping flex-shrink-0"></span>
               <span className="truncate">Live Cash Book Register</span>
             </div>
           </div>
           
-          <div className="flex gap-2.5 sm:gap-4 overflow-hidden w-full lg:w-auto">
-            <div className="flex-1 lg:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/20 min-w-0 flex flex-col justify-center">
+          <div className="flex gap-2.5 sm:gap-4 overflow-hidden w-full lg:w-auto shrink-0">
+            <div className="flex-1 lg:w-44 xl:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/20 min-w-0 flex flex-col justify-center">
               <div className="text-xs opacity-80 mb-1 font-medium truncate">Today's Income</div>
-              <div className={`text-emerald-200 ${getBoxValueClass('+' + formatCurrency(todayIncome))}`}>+{formatCurrency(todayIncome)}</div>
+              <div className={`text-emerald-200 ${getBoxValueClass('+' + formatCurrency(todayIncome))}`} title={'+' + formatCurrency(todayIncome)}>+{formatCurrency(todayIncome)}</div>
             </div>
-            <div className="flex-1 lg:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/20 min-w-0 flex flex-col justify-center">
+            <div className="flex-1 lg:w-44 xl:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/20 min-w-0 flex flex-col justify-center">
               <div className="text-xs opacity-80 mb-1 font-medium truncate">Today's Expenses</div>
-              <div className={`text-red-200 ${getBoxValueClass('-' + formatCurrency(todayExpense))}`}>-{formatCurrency(todayExpense)}</div>
+              <div className={`text-red-200 ${getBoxValueClass('-' + formatCurrency(todayExpense))}`} title={'-' + formatCurrency(todayExpense)}>-{formatCurrency(todayExpense)}</div>
             </div>
           </div>
         </div>
@@ -173,30 +207,58 @@ export default function Dashboard() {
       {/* Main Grid Section: Chart & Goals Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Monthly Trend Chart Pane */}
-        <div className="lg:col-span-8 bg-white dark:bg-slate-800 md:bg-emerald-50/70 md:dark:bg-slate-800 text-slate-800 dark:text-slate-100 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 md:border-emerald-200/80 md:dark:border-slate-700 shadow-sm flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="font-extrabold text-base md:text-lg flex items-center gap-2 text-slate-800 dark:text-slate-100">
-              <TrendingUp size={20} className="text-emerald-600 dark:text-emerald-400" />
-              Cash Flow Summary (This Month)
+        <div className="lg:col-span-7 xl:col-span-8 bg-white dark:bg-slate-800 md:bg-emerald-50/70 md:dark:bg-slate-800 text-slate-800 dark:text-slate-100 p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-700 md:border-emerald-200/80 md:dark:border-slate-700 shadow-sm flex flex-col justify-between min-w-0">
+          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 mb-4 sm:mb-6">
+            <h2 className="font-extrabold text-sm sm:text-base lg:text-lg flex items-center gap-2 text-slate-800 dark:text-slate-100 min-w-0">
+              <TrendingUp size={18} className="text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+              <span className="truncate">Cash Flow Summary (This Month)</span>
             </h2>
-            <div className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/60 px-3 py-1 rounded-full">
+            <div className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/60 px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0">
               Monthly Register
             </div>
           </div>
           
-          <div style={{ width: '100%', height: 200 }} className="mb-4">
+          <div style={{ width: '100%', height: 200 }} className="mb-4 select-none [&_*]:focus:outline-none [&_*]:focus:ring-0 [-webkit-tap-highlight-color:transparent]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
+              <BarChart data={chartData} margin={{ top: 20, right: 10, left: 0, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => formatCurrency(val)} width={80} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} tickFormatter={(val) => formatCurrency(val)} width={70} />
                 <Tooltip 
                   formatter={(value: number) => formatCurrency(value)}
                   contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', color: '#0f172a', boxShadow: '0 4px 12px -2px rgb(0 0 0 / 0.1)' }}
                   cursor={false}
                 />
-                <Bar dataKey="income" name="Income" fill="#10b981" radius={[6, 6, 0, 0]} maxBarSize={50} />
-                <Bar dataKey="expense" name="Expense" fill="#ef4444" radius={[6, 6, 0, 0]} maxBarSize={50} />
+                <Bar 
+                  dataKey="income" 
+                  name="Income" 
+                  fill="#10b981" 
+                  radius={[6, 6, 0, 0]} 
+                  maxBarSize={45} 
+                  activeBar={false}
+                  onClick={(_, index) => {
+                    setSelectedBar(prev => (prev?.index === index && prev?.dataKey === 'income' ? null : { index, dataKey: 'income' }));
+                  }}
+                  shape={(props: any) => {
+                    const isSelected = selectedBar?.index === props.index && selectedBar?.dataKey === 'income';
+                    return renderZoomBarShape(props, isSelected);
+                  }}
+                />
+                <Bar 
+                  dataKey="expense" 
+                  name="Expense" 
+                  fill="#ef4444" 
+                  radius={[6, 6, 0, 0]} 
+                  maxBarSize={45} 
+                  activeBar={false}
+                  onClick={(_, index) => {
+                    setSelectedBar(prev => (prev?.index === index && prev?.dataKey === 'expense' ? null : { index, dataKey: 'expense' }));
+                  }}
+                  shape={(props: any) => {
+                    const isSelected = selectedBar?.index === props.index && selectedBar?.dataKey === 'expense';
+                    return renderZoomBarShape(props, isSelected);
+                  }}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -204,41 +266,41 @@ export default function Dashboard() {
           {/* Bottom Summary & Legend Badges with Corresponding Colors */}
           <div className="pt-3.5 border-t border-slate-200/60 dark:border-slate-700/60 grid grid-cols-3 gap-1.5 sm:gap-3 items-center w-full">
             {/* Amount In Badge */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1.5 py-2 sm:px-3 sm:py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 shadow-sm min-w-0 text-center">
+            <div className="flex flex-col xl:flex-row items-center justify-center gap-0.5 xl:gap-1.5 px-1 py-2 sm:px-2.5 sm:py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 shadow-sm min-w-0 text-center">
               <div className="flex items-center gap-1 flex-shrink-0">
-                <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
                 <span className="text-[10px] sm:text-xs font-bold text-emerald-800 dark:text-emerald-300">
-                  In<span className="hidden sm:inline">come</span>:
+                  In<span className="hidden xl:inline">come</span>:
                 </span>
               </div>
-              <span className="font-black text-emerald-600 dark:text-emerald-400 text-[10px] xs:text-xs sm:text-sm whitespace-nowrap">
+              <span className="font-black text-emerald-600 dark:text-emerald-400 text-[10px] sm:text-xs xl:text-sm whitespace-nowrap truncate max-w-full">
                 +{formatCurrency(monthlyIncome)}
               </span>
             </div>
 
             {/* Amount Out Badge */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1.5 py-2 sm:px-3 sm:py-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200/80 dark:border-red-800/60 shadow-sm min-w-0 text-center">
+            <div className="flex flex-col xl:flex-row items-center justify-center gap-0.5 xl:gap-1.5 px-1 py-2 sm:px-2.5 sm:py-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200/80 dark:border-red-800/60 shadow-sm min-w-0 text-center">
               <div className="flex items-center gap-1 flex-shrink-0">
-                <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-red-500 flex-shrink-0 animate-pulse"></span>
+                <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0 animate-pulse"></span>
                 <span className="text-[10px] sm:text-xs font-bold text-red-800 dark:text-red-300">
-                  Out<span className="hidden sm:inline">go</span>:
+                  Out<span className="hidden xl:inline">go</span>:
                 </span>
               </div>
-              <span className="font-black text-red-600 dark:text-red-400 text-[10px] xs:text-xs sm:text-sm whitespace-nowrap">
+              <span className="font-black text-red-600 dark:text-red-400 text-[10px] sm:text-xs xl:text-sm whitespace-nowrap truncate max-w-full">
                 -{formatCurrency(monthlyExpense)}
               </span>
             </div>
 
             {/* Net Flow Balance Badge */}
-            <div className={`flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1.5 py-2 sm:px-3 sm:py-2.5 rounded-xl border text-center shadow-sm min-w-0 ${
+            <div className={`flex flex-col xl:flex-row items-center justify-center gap-0.5 xl:gap-1.5 px-1 py-2 sm:px-2.5 sm:py-2.5 rounded-xl border text-center shadow-sm min-w-0 ${
               (monthlyIncome - monthlyExpense) >= 0 
                 ? 'bg-emerald-100/80 dark:bg-emerald-900/50 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200' 
                 : 'bg-red-100/80 dark:bg-red-900/50 border-red-300 dark:border-red-700 text-red-800 dark:text-red-200'
             }`}>
               <span className="text-[10px] sm:text-xs font-bold opacity-90 flex-shrink-0">
-                Net<span className="hidden sm:inline"> Flow</span>:
+                Net<span className="hidden xl:inline"> Flow</span>:
               </span>
-              <span className="font-black text-[10px] xs:text-xs sm:text-sm whitespace-nowrap">
+              <span className="font-black text-[10px] sm:text-xs xl:text-sm whitespace-nowrap truncate max-w-full">
                 {(monthlyIncome - monthlyExpense) >= 0 ? '+' : ''}{formatCurrency(monthlyIncome - monthlyExpense)}
               </span>
             </div>
@@ -246,42 +308,75 @@ export default function Dashboard() {
         </div>
 
         {/* Goals Progress Card Pane */}
-        <div className="lg:col-span-4 bg-white dark:bg-slate-800 md:bg-emerald-50/70 md:dark:bg-slate-800 text-slate-800 dark:text-slate-100 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 md:border-emerald-200/80 md:dark:border-slate-700 shadow-sm flex flex-col justify-between">
-          <div>
-            <h2 className="font-extrabold text-base md:text-lg flex items-center gap-2 text-slate-800 dark:text-slate-100 mb-4">
-              <Target size={20} className="text-amber-500 md:text-emerald-600 md:dark:text-emerald-400" />
-              Overall Goals Progress
-            </h2>
-            <div className="space-y-4">
-              <div className="bg-slate-50 dark:bg-slate-900/50 md:bg-white/80 md:dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700/50 md:border-emerald-200/60">
-                <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase">
-                  <span>Saved</span>
-                  <span>Target</span>
+        <div className="lg:col-span-5 xl:col-span-4 bg-white dark:bg-slate-800 md:bg-emerald-50/70 md:dark:bg-slate-800 text-slate-800 dark:text-slate-100 p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-700 md:border-emerald-200/80 md:dark:border-slate-700 shadow-sm flex flex-col justify-between min-w-0">
+          <div className="min-w-0">
+            <div className="flex items-center justify-between gap-2 mb-4">
+              <h2 className="font-extrabold text-base md:text-lg flex items-center gap-2 text-slate-800 dark:text-slate-100 min-w-0">
+                <Target size={20} className="text-amber-500 md:text-emerald-600 md:dark:text-emerald-400 flex-shrink-0" />
+                <span className="whitespace-nowrap font-black">Overall Goals Progress</span>
+              </h2>
+              <span className="text-[11px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950/60 px-2.5 py-0.5 rounded-full flex-shrink-0">
+                {goals.length} {goals.length === 1 ? 'Goal' : 'Goals'}
+              </span>
+            </div>
+
+            {/* Target & Saved Stat Cards - TOP: Target Goal, BOTTOM: Saved Amount */}
+            <div className="flex flex-col gap-3 mb-4 min-w-0">
+              {/* 1. Target Goal Box (at TOP) */}
+              <div className="bg-slate-50 dark:bg-slate-900/60 md:bg-white/90 md:dark:bg-slate-900/60 p-3.5 sm:p-4 rounded-xl border border-slate-200/60 dark:border-slate-700/60 md:border-emerald-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 min-w-0">
+                <div className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex-shrink-0">
+                  Target Goal
                 </div>
-                <div className="flex justify-between text-base font-black text-slate-800 dark:text-slate-100">
-                  <span>{formatCurrency(totalGoalCurrent)}</span>
-                  <span>{formatCurrency(totalGoalTarget)}</span>
+                <div 
+                  className={`font-black text-slate-800 dark:text-slate-100 text-base sm:text-lg md:text-xl xl:text-2xl tracking-tight leading-tight whitespace-nowrap overflow-visible ${getBoxValueClass(formatCurrency(totalGoalTarget))}`}
+                  title={formatCurrency(totalGoalTarget)}
+                >
+                  {formatCurrency(totalGoalTarget)}
                 </div>
               </div>
 
-              <div>
-                <div className="flex justify-between text-xs font-bold mb-1.5">
-                  <span className="text-slate-600 dark:text-slate-300">Completion Status</span>
-                  <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{Math.round(monthlySavingsProgress)}%</span>
+              {/* 2. Saved Amount Box (BELOW Target Goal) */}
+              <div className="bg-slate-50 dark:bg-slate-900/60 md:bg-white/90 md:dark:bg-slate-900/60 p-3.5 sm:p-4 rounded-xl border border-slate-200/60 dark:border-slate-700/60 md:border-emerald-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 min-w-0">
+                <div className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex-shrink-0">
+                  Saved Amount
                 </div>
-                <div className="h-3 bg-slate-100 dark:bg-slate-900 md:bg-emerald-200/50 md:dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200/20 md:border-emerald-200/40">
-                  <div 
-                    className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all duration-1000" 
-                    style={{ width: `${Math.min(monthlySavingsProgress, 100)}%` }}
-                  ></div>
+                <div 
+                  className={`font-black text-emerald-600 dark:text-emerald-400 text-base sm:text-lg md:text-xl xl:text-2xl tracking-tight leading-tight whitespace-nowrap overflow-visible ${getBoxValueClass(formatCurrency(totalGoalCurrent))}`}
+                  title={formatCurrency(totalGoalCurrent)}
+                >
+                  {formatCurrency(totalGoalCurrent)}
                 </div>
+              </div>
+            </div>
+
+            {/* Progress Bar & Completion Details */}
+            <div className="bg-slate-50 dark:bg-slate-900/40 md:bg-white/60 md:dark:bg-slate-900/40 p-3.5 sm:p-4 rounded-xl border border-slate-200/50 dark:border-slate-700/50 space-y-2.5 min-w-0">
+              <div className="flex items-center justify-between text-xs font-bold gap-2">
+                <span className="text-slate-600 dark:text-slate-300 font-extrabold whitespace-nowrap">Completion Rate</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-black text-sm flex-shrink-0">
+                  {Math.round(monthlySavingsProgress)}%
+                </span>
+              </div>
+
+              <div className="h-3.5 bg-slate-200/80 dark:bg-slate-800 md:bg-emerald-200/50 md:dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200/20 md:border-emerald-200/40">
+                <div 
+                  className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all duration-1000 rounded-full" 
+                  style={{ width: `${Math.min(monthlySavingsProgress, 100)}%` }}
+                ></div>
+              </div>
+
+              <div className="flex justify-between items-center text-[11px] font-semibold text-slate-500 dark:text-slate-400 pt-0.5 min-w-0">
+                <span className="whitespace-nowrap font-bold">Remaining to Target:</span>
+                <span className="font-extrabold text-slate-700 dark:text-slate-300 whitespace-nowrap overflow-visible ml-1" title={formatCurrency(Math.max(0, totalGoalTarget - totalGoalCurrent))}>
+                  {formatCurrency(Math.max(0, totalGoalTarget - totalGoalCurrent))}
+                </span>
               </div>
             </div>
           </div>
 
           <button 
             onClick={() => setIsAddGoalOpen(true)}
-            className="w-full mt-6 py-3 bg-emerald-50 dark:bg-emerald-950/40 md:bg-emerald-600 md:hover:bg-emerald-700 text-emerald-700 dark:text-emerald-400 md:text-white font-bold rounded-xl text-xs hover:bg-emerald-100 transition-colors border border-emerald-200/50 dark:border-emerald-800/50 md:border-transparent flex items-center justify-center gap-2"
+            className="w-full mt-5 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-colors shadow-sm flex items-center justify-center gap-2 cursor-pointer shrink-0"
           >
             + Create New Savings Goal
           </button>

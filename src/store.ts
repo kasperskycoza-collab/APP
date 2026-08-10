@@ -10,6 +10,8 @@ interface StoreState extends AppState {
   addTransaction: (tx: Omit<Transaction, 'id'>) => void;
   editTransaction: (id: number, tx: Partial<Omit<Transaction, 'id'>>) => void;
   deleteTransaction: (id: number) => void;
+  repeatTransaction: (id: number) => void;
+  processRecurringTransactions: () => void;
   addGoal: (goal: Omit<Goal, 'id'>) => void;
   setCurrency: (currency: string) => void;
   editGoal: (id: number, goal: Partial<Omit<Goal, 'id'>>) => void;
@@ -448,7 +450,103 @@ export const useStore = create<StoreState>()(
           return { incomeCategories: state.incomeCategories.filter(c => c !== category) };
         }
         return { expenseCategories: state.expenseCategories.filter(c => c !== category) };
-      })
+      }),
+
+      repeatTransaction: (id: number) => {
+        const state = get();
+        const tx = state.transactions.find(t => t.id === id);
+        if (!tx) return;
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        const newTx: Omit<Transaction, 'id'> = {
+          type: tx.type,
+          amount: tx.amount,
+          category: tx.category,
+          date: todayStr,
+          description: tx.description ? (tx.description.includes('(Repeat)') ? tx.description : `${tx.description} (Repeat)`) : 'Repeated Transaction',
+          method: tx.method,
+          account: tx.account,
+          recurring: tx.recurring || false,
+          frequency: tx.frequency,
+          goalId: tx.goalId
+        };
+
+        get().addTransaction(newTx);
+      },
+
+      processRecurringTransactions: () => {
+        const state = get();
+        const todayStr = new Date().toISOString().split('T')[0];
+        const today = new Date(todayStr);
+
+        const recurringTxs = (state.transactions || []).filter(t => t.recurring && t.frequency);
+        if (recurringTxs.length === 0) return;
+
+        recurringTxs.forEach(tx => {
+          let txDate = new Date(tx.date);
+          if (isNaN(txDate.getTime())) return;
+
+          let freq = (tx.frequency || 'monthly').toLowerCase();
+          let nextDate = new Date(txDate);
+
+          // Advance one step from original txDate
+          if (freq === 'daily') {
+            nextDate.setDate(nextDate.getDate() + 1);
+          } else if (freq === 'weekly') {
+            nextDate.setDate(nextDate.getDate() + 7);
+          } else if (freq === 'monthly') {
+            nextDate.setMonth(nextDate.getMonth() + 1);
+          } else if (freq === 'yearly') {
+            nextDate.setFullYear(nextDate.getFullYear() + 1);
+          } else {
+            nextDate.setMonth(nextDate.getMonth() + 1);
+          }
+
+          // Loop and generate all due instances up to today
+          let safetyLimit = 0;
+          while (nextDate <= today && safetyLimit < 365) {
+            safetyLimit++;
+            const nextDateStr = nextDate.toISOString().split('T')[0];
+            
+            // Check if instance for this nextDateStr already exists
+            const alreadyExists = get().transactions.some(t => 
+              t.account === tx.account && 
+              t.type === tx.type && 
+              t.amount === tx.amount && 
+              t.category === tx.category && 
+              t.date === nextDateStr
+            );
+
+            if (!alreadyExists) {
+              get().addTransaction({
+                type: tx.type,
+                amount: tx.amount,
+                category: tx.category,
+                date: nextDateStr,
+                description: tx.description ? `${tx.description}` : 'Recurring Transaction',
+                method: tx.method,
+                account: tx.account,
+                recurring: true,
+                frequency: tx.frequency,
+                goalId: tx.goalId
+              });
+            }
+
+            // Advance to next interval
+            if (freq === 'daily') {
+              nextDate.setDate(nextDate.getDate() + 1);
+            } else if (freq === 'weekly') {
+              nextDate.setDate(nextDate.getDate() + 7);
+            } else if (freq === 'monthly') {
+              nextDate.setMonth(nextDate.getMonth() + 1);
+            } else if (freq === 'yearly') {
+              nextDate.setFullYear(nextDate.getFullYear() + 1);
+            } else {
+              break;
+            }
+          }
+        });
+      }
     }),
     {
       name: 'simzy-storage',
