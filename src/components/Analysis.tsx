@@ -398,16 +398,16 @@ export default function Analysis() {
         </div>
 
         {/* Adjustments Form Controls Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 items-end">
           {/* Account Filter */}
-          <div>
+          <div className="min-w-0">
             <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
               Account Scope
             </label>
             <select
               value={activeAccount}
               onChange={(e) => setActiveAccount(e.target.value)}
-              className="w-full text-xs font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl px-3 py-2.5 cursor-pointer focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full h-[42px] text-xs font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl px-3 cursor-pointer focus:outline-none focus:border-emerald-500 transition-colors"
             >
               <option value="all">All Accounts ({accounts.length})</option>
               {accounts.map(acc => (
@@ -416,36 +416,39 @@ export default function Analysis() {
             </select>
           </div>
 
-          {/* Timeframe Interval - Expanded on Tablet Horizontal */}
-          <div className="md:col-span-2 lg:col-span-2">
+          {/* Timeframe Interval - Analysis Period */}
+          <div className="min-w-0">
             <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
               Analysis Period
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-100 dark:bg-slate-900 p-2 rounded-xl border border-slate-200/60 dark:border-slate-700/60 min-h-[48px] items-center">
+            <div className="grid grid-cols-4 gap-0.5 sm:gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/60 h-[42px] items-center w-full min-w-0">
               {['daily', 'weekly', 'monthly', 'yearly'].map(p => (
                 <button
                   key={p}
                   onClick={() => setPeriod(p)}
-                  className={`w-full py-2.5 px-3 text-xs sm:text-sm font-extrabold capitalize transition-all text-center whitespace-nowrap flex items-center justify-center rounded-lg cursor-pointer ${
+                  className={`w-full h-full min-w-0 px-0.5 sm:px-1 text-[9.5px] min-[400px]:text-[10px] sm:text-[10.5px] md:text-[11px] lg:text-xs font-extrabold tracking-tighter sm:tracking-tight capitalize transition-all text-center flex items-center justify-center rounded-lg cursor-pointer ${
                     period === p 
                       ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-200/50 dark:border-slate-700' 
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
+                  title={`${p} Analysis`}
                 >
-                  {p}
+                  <span className="w-full min-w-0 block text-center truncate">
+                    {p === 'daily' ? 'Daily' : p === 'weekly' ? 'Weekly' : p === 'monthly' ? 'Monthly' : 'Yearly'}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Audited Entries Indicator */}
-          <div>
+          <div className="min-w-0">
             <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
               Audited Records
             </label>
-            <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 flex justify-between items-center h-[38px]">
-              <span>Filtered Records</span>
-              <span className="px-2.5 py-0.5 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 rounded-md font-black">{stats.count}</span>
+            <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 text-xs font-bold text-slate-700 dark:text-slate-200 flex justify-between items-center h-[42px]">
+              <span className="truncate">Filtered Records</span>
+              <span className="px-2.5 py-0.5 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 rounded-md font-black shrink-0">{stats.count}</span>
             </div>
           </div>
         </div>

@@ -197,39 +197,29 @@ export default function AddTransactionModal({ isOpen, onClose, initialType = 'ex
               </select>
             </div>
 
-            <div className="flex flex-col gap-2 bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-700">
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="recurring"
-                  checked={recurring}
-                  onChange={(e) => setRecurring(e.target.checked)}
-                  className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                />
-                <label htmlFor="recurring" className="text-sm font-extrabold text-slate-800 dark:text-slate-200 cursor-pointer">
-                  Make this recurring / repeat
-                </label>
-              </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 pl-8">
-                Automatically repeats this transaction on the selected schedule when due.
-              </p>
-              {recurring && (
-                <div className="pl-8 pt-1">
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    Repeat Frequency
-                  </label>
+            <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+              <input
+                type="checkbox"
+                id="recurring"
+                checked={recurring}
+                onChange={(e) => setRecurring(e.target.checked)}
+                className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <div className="flex-1">
+                <label htmlFor="recurring" className="text-sm font-semibold text-slate-700 dark:text-slate-300">Make this recurring</label>
+                {recurring && (
                   <select
                     value={frequency}
                     onChange={(e) => setFrequency(e.target.value)}
-                    className="w-full border border-slate-200 dark:border-slate-700 rounded-lg p-2 focus:border-emerald-500 focus:outline-none text-sm bg-white dark:bg-slate-800 font-semibold"
+                    className="mt-2 w-full border border-slate-200 dark:border-slate-700 rounded-lg p-2 focus:border-emerald-500 focus:outline-none text-sm bg-white dark:bg-slate-800"
                   >
-                    <option value="daily">Daily (Every day)</option>
-                    <option value="weekly">Weekly (Every week)</option>
-                    <option value="monthly">Monthly (Every month)</option>
-                    <option value="yearly">Yearly (Every year)</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
                   </select>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             <div className="pt-4 pb-2">

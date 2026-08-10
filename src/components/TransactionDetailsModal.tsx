@@ -1,8 +1,6 @@
-import React, { useState } from 'react';
-import { X, Calendar, Wallet, Tag, Target, RefreshCw, CreditCard, ArrowDown, ArrowUp, Edit2, Trash2, RotateCw, CheckCircle2 } from 'lucide-react';
+import { X, Calendar, Wallet, Tag, Target, RefreshCw, CreditCard, ArrowDown, ArrowUp, Edit2, Trash2 } from 'lucide-react';
 import { Transaction, Account, Goal } from '../types';
 import { formatCurrency as formatMoney } from '../utils';
-import { useStore } from '../store';
 
 interface TransactionDetailsModalProps {
   isOpen: boolean;
@@ -27,18 +25,7 @@ export default function TransactionDetailsModal({
   onEdit,
   onDelete
 }: TransactionDetailsModalProps) {
-  const { repeatTransaction } = useStore();
-  const [repeatedSuccess, setRepeatedSuccess] = useState(false);
-
   if (!isOpen || !transaction) return null;
-
-  const handleRepeat = () => {
-    repeatTransaction(transaction.id);
-    setRepeatedSuccess(true);
-    setTimeout(() => {
-      setRepeatedSuccess(false);
-    }, 3000);
-  };
 
   const isIncome = transaction.type === 'income';
   const formatCurrency = (amount: number) => formatMoney(amount, currency);
@@ -166,30 +153,15 @@ export default function TransactionDetailsModal({
                 </div>
               </div>
             )}
-            {/* Success toast when repeated */}
-            {repeatedSuccess && (
-              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-xl text-emerald-800 dark:text-emerald-200 text-xs font-bold flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
-                <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-                <span>Transaction repeated successfully for today!</span>
-              </div>
-            )}
           </div>
         </div>
 
         {/* Footer actions */}
-        <div className="p-4 border-t border-slate-100 dark:border-slate-700/50 flex-shrink-0 bg-slate-50 dark:bg-slate-900/20 flex items-center gap-2 sm:gap-3 rounded-b-2xl">
-          <button 
-            onClick={handleRepeat}
-            className="flex-1 py-3 px-3 sm:px-4 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs sm:text-sm rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-sm"
-            title="Repeat / Duplicate this transaction for today"
-          >
-            <RotateCw size={16} /> Repeat
-          </button>
-
+        <div className="p-4 border-t border-slate-100 dark:border-slate-700/50 flex-shrink-0 bg-slate-50 dark:bg-slate-900/20 flex items-center gap-3 rounded-b-2xl">
           {onEdit && (
             <button 
               onClick={() => onEdit(transaction)}
-              className="flex-1 py-3 px-3 sm:px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+              className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-sm"
             >
               <Edit2 size={16} /> Edit
             </button>
@@ -208,7 +180,7 @@ export default function TransactionDetailsModal({
           
           <button 
             onClick={onClose} 
-            className="py-3 px-4 text-center bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200 rounded-xl transition duration-150"
+            className="py-3 px-5 text-center bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200 rounded-xl transition duration-150"
           >
             Close
           </button>

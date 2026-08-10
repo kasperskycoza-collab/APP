@@ -11,12 +11,8 @@ import { LogIn, Key, Mail, Wallet, User, UserPlus, UserCheck, AlertCircle } from
 import { auth, provider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, hasFirebaseConfig } from './firebase';
 
 export default function App() {
-  const { isLoggedIn, pinLock, darkMode, login, logout, user, toggleDarkMode, registerOfflineUser, accessOfflineUser, registeredUsers, processRecurringTransactions } = useStore();
+  const { isLoggedIn, pinLock, darkMode, login, logout, user, toggleDarkMode, registerOfflineUser, accessOfflineUser, registeredUsers } = useStore();
   const [currentTab, setCurrentTab] = useState('dashboard');
-
-  useEffect(() => {
-    processRecurringTransactions();
-  }, [processRecurringTransactions]);
   
   // Firebase Auth states
   const [email, setEmail] = useState('');

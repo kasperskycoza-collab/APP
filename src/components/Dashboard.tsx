@@ -313,47 +313,47 @@ export default function Dashboard() {
             <div className="flex items-center justify-between gap-2 mb-4">
               <h2 className="font-extrabold text-base md:text-lg flex items-center gap-2 text-slate-800 dark:text-slate-100 min-w-0">
                 <Target size={20} className="text-amber-500 md:text-emerald-600 md:dark:text-emerald-400 flex-shrink-0" />
-                <span className="whitespace-nowrap font-black">Overall Goals Progress</span>
+                <span className="truncate">Overall Goals Progress</span>
               </h2>
               <span className="text-[11px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950/60 px-2.5 py-0.5 rounded-full flex-shrink-0">
                 {goals.length} {goals.length === 1 ? 'Goal' : 'Goals'}
               </span>
             </div>
 
-            {/* Target & Saved Stat Cards - TOP: Target Goal, BOTTOM: Saved Amount */}
-            <div className="flex flex-col gap-3 mb-4 min-w-0">
-              {/* 1. Target Goal Box (at TOP) */}
-              <div className="bg-slate-50 dark:bg-slate-900/60 md:bg-white/90 md:dark:bg-slate-900/60 p-3.5 sm:p-4 rounded-xl border border-slate-200/60 dark:border-slate-700/60 md:border-emerald-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 min-w-0">
-                <div className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex-shrink-0">
-                  Target Goal
-                </div>
-                <div 
-                  className={`font-black text-slate-800 dark:text-slate-100 text-base sm:text-lg md:text-xl xl:text-2xl tracking-tight leading-tight whitespace-nowrap overflow-visible ${getBoxValueClass(formatCurrency(totalGoalTarget))}`}
-                  title={formatCurrency(totalGoalTarget)}
-                >
-                  {formatCurrency(totalGoalTarget)}
-                </div>
-              </div>
-
-              {/* 2. Saved Amount Box (BELOW Target Goal) */}
-              <div className="bg-slate-50 dark:bg-slate-900/60 md:bg-white/90 md:dark:bg-slate-900/60 p-3.5 sm:p-4 rounded-xl border border-slate-200/60 dark:border-slate-700/60 md:border-emerald-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 min-w-0">
-                <div className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex-shrink-0">
+            {/* Saved & Target Stat Row Cards - Two Stacked Bar Cards (Saved Amount on top of Target Goal) */}
+            <div className="flex flex-col gap-2.5 sm:gap-3 mb-4 min-w-0">
+              {/* Saved Box - Stacked Label on Top of Amount */}
+              <div className="bg-slate-50 dark:bg-slate-900/60 md:bg-white/90 md:dark:bg-slate-900/60 p-3 sm:p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-700/60 md:border-emerald-200/60 flex flex-col justify-between min-w-0 gap-1">
+                <div className="text-[11px] sm:text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
                   Saved Amount
                 </div>
                 <div 
-                  className={`font-black text-emerald-600 dark:text-emerald-400 text-base sm:text-lg md:text-xl xl:text-2xl tracking-tight leading-tight whitespace-nowrap overflow-visible ${getBoxValueClass(formatCurrency(totalGoalCurrent))}`}
+                  className="font-black text-emerald-600 dark:text-emerald-400 text-base sm:text-lg md:text-xl lg:text-2xl tracking-tight leading-snug break-words"
                   title={formatCurrency(totalGoalCurrent)}
                 >
                   {formatCurrency(totalGoalCurrent)}
                 </div>
               </div>
+
+              {/* Target Box - Stacked Label on Top of Amount */}
+              <div className="bg-slate-50 dark:bg-slate-900/60 md:bg-white/90 md:dark:bg-slate-900/60 p-3 sm:p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-700/60 md:border-emerald-200/60 flex flex-col justify-between min-w-0 gap-1">
+                <div className="text-[11px] sm:text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
+                  Target Goal
+                </div>
+                <div 
+                  className="font-black text-slate-800 dark:text-slate-100 text-base sm:text-lg md:text-xl lg:text-2xl tracking-tight leading-snug break-words"
+                  title={formatCurrency(totalGoalTarget)}
+                >
+                  {formatCurrency(totalGoalTarget)}
+                </div>
+              </div>
             </div>
 
             {/* Progress Bar & Completion Details */}
-            <div className="bg-slate-50 dark:bg-slate-900/40 md:bg-white/60 md:dark:bg-slate-900/40 p-3.5 sm:p-4 rounded-xl border border-slate-200/50 dark:border-slate-700/50 space-y-2.5 min-w-0">
+            <div className="bg-slate-50 dark:bg-slate-900/40 md:bg-white/60 md:dark:bg-slate-900/40 p-3.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 space-y-2.5 min-w-0">
               <div className="flex items-center justify-between text-xs font-bold gap-2">
-                <span className="text-slate-600 dark:text-slate-300 font-extrabold whitespace-nowrap">Completion Rate</span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-black text-sm flex-shrink-0">
+                <span className="text-slate-600 dark:text-slate-300 truncate">Completion Rate</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-black flex-shrink-0">
                   {Math.round(monthlySavingsProgress)}%
                 </span>
               </div>
@@ -366,8 +366,8 @@ export default function Dashboard() {
               </div>
 
               <div className="flex justify-between items-center text-[11px] font-semibold text-slate-500 dark:text-slate-400 pt-0.5 min-w-0">
-                <span className="whitespace-nowrap font-bold">Remaining to Target:</span>
-                <span className="font-extrabold text-slate-700 dark:text-slate-300 whitespace-nowrap overflow-visible ml-1" title={formatCurrency(Math.max(0, totalGoalTarget - totalGoalCurrent))}>
+                <span>Remaining:</span>
+                <span className="font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap overflow-visible ml-1" title={formatCurrency(Math.max(0, totalGoalTarget - totalGoalCurrent))}>
                   {formatCurrency(Math.max(0, totalGoalTarget - totalGoalCurrent))}
                 </span>
               </div>

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { formatCurrency as formatMoney, getBoxValueClass, getMainValueClass } from '../utils';
-import { ArrowDown, ArrowUp, Plus, Search, Filter, Trash2, Edit2, List, AlignLeft, ChevronDown, Target, RefreshCw, RotateCw, CheckCircle2, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Plus, Search, Filter, Trash2, Edit2, List, AlignLeft, ChevronDown, Target, RefreshCw } from 'lucide-react';
 import { useStore } from '../store';
 import AddTransactionModal from './AddTransactionModal';
 import EditTransactionModal from './EditTransactionModal';
@@ -37,7 +37,7 @@ const getPeriodKey = (dateString: string, groupBy: TimeGroup) => {
 };
 
 export default function Transactions() {
-  const { transactions, currency, deleteTransaction, repeatTransaction, accounts, goals } = useStore();
+  const { transactions, currency, deleteTransaction, accounts, goals } = useStore();
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
   const [sortBy, setSortBy] = useState<SortOption>('date_desc');
@@ -47,15 +47,6 @@ export default function Transactions() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deletingTransactionId, setDeletingTransactionId] = useState<number | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [repeatToast, setRepeatToast] = useState<string | null>(null);
-
-  const handleRepeat = (t: Transaction) => {
-    repeatTransaction(t.id);
-    setRepeatToast(`Repeated "${t.description || 'Transaction'}" for today!`);
-    setTimeout(() => {
-      setRepeatToast(null);
-    }, 3000);
-  };
 
   const transactionNetBalances = useMemo(() => {
     // Sort all transactions chronologically (oldest to newest) to compute historical running balance correctly
@@ -209,18 +200,9 @@ export default function Transactions() {
             </div>
             <div className="flex gap-1">
               <button 
-                onClick={(e) => { e.stopPropagation(); handleRepeat(t); }}
-                className="text-slate-400 hover:text-purple-600 transition-colors p-1 rounded-md hover:bg-purple-50 dark:hover:bg-purple-900/30"
-                aria-label="Repeat transaction"
-                title="Repeat / Duplicate Transaction"
-              >
-                <RotateCw size={14} />
-              </button>
-              <button 
                 onClick={(e) => { e.stopPropagation(); setEditingTransaction(t); }}
                 className="text-slate-400 hover:text-blue-500 transition-colors p-1 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30"
                 aria-label="Edit transaction"
-                title="Edit Transaction"
               >
                 <Edit2 size={14} />
               </button>
@@ -228,7 +210,6 @@ export default function Transactions() {
                 onClick={(e) => { e.stopPropagation(); handleDelete(t.id); }}
                 className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/30"
                 aria-label="Delete transaction"
-                title="Delete Transaction"
               >
                 <Trash2 size={14} />
               </button>
@@ -246,19 +227,6 @@ export default function Transactions() {
 
   return (
     <div className="pb-24 md:pb-8 space-y-6 min-w-0 max-w-full overflow-x-hidden">
-      {/* Toast notification for repeat action */}
-      {repeatToast && (
-        <div className="p-3 bg-purple-600 text-white rounded-xl shadow-lg font-bold text-xs md:text-sm flex items-center justify-between gap-2 animate-in fade-in slide-in-from-top-3">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 size={18} />
-            <span>{repeatToast}</span>
-          </div>
-          <button onClick={() => setRepeatToast(null)} className="opacity-80 hover:opacity-100 p-1">
-            <X size={16} />
-          </button>
-        </div>
-      )}
-
       {/* Top Green Banner Card - Identical in size, style & rounded edges to Dashboard */}
       <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white p-5 md:p-6 lg:p-8 rounded-2xl md:rounded-3xl shadow-xl relative z-10 overflow-hidden">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6">
@@ -313,78 +281,95 @@ export default function Transactions() {
         </div>
 
         {/* Adjustments Form Controls Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-          {/* Transaction Type Filter - Full Row in Tablet Horizontal */}
-          <div className="md:col-span-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 items-end">
+          {/* Transaction Type Filter */}
+          <div className="min-w-0">
             <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
               Type Filter
             </label>
-            <div className="grid grid-cols-3 gap-2 bg-slate-100 dark:bg-slate-900 p-2 rounded-xl border border-slate-200/60 dark:border-slate-700/60 min-h-[48px] items-center w-full">
+            <div className="grid grid-cols-3 gap-0.5 sm:gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/60 h-[42px] items-center w-full min-w-0">
               {(['all', 'income', 'expense'] as const).map(type => (
                 <button
                   key={type}
                   onClick={() => setFilterType(type)}
-                  className={`w-full py-2.5 px-3 text-xs sm:text-sm font-extrabold capitalize transition-all text-center whitespace-nowrap flex items-center justify-center rounded-lg cursor-pointer ${
+                  className={`w-full h-full min-w-0 px-0.5 sm:px-1 text-[10.5px] sm:text-[11px] md:text-xs font-extrabold capitalize transition-all text-center flex items-center justify-center rounded-lg cursor-pointer ${
                     filterType === type 
                       ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-200/50 dark:border-slate-700' 
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                 >
-                  {type === 'all' ? 'All Types' : type}
+                  <span className="w-full min-w-0 block text-center truncate">
+                    {type === 'all' ? 'All' : type}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* View Mode Layout - Full Row in Tablet Horizontal */}
-          <div className="md:col-span-2">
+          {/* View Mode Layout */}
+          <div className="min-w-0">
             <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
               Layout View
             </label>
-            <div className="grid grid-cols-3 gap-2 bg-slate-100 dark:bg-slate-900 p-2 rounded-xl border border-slate-200/60 dark:border-slate-700/60 min-h-[48px] items-center w-full">
+            <div className="grid grid-cols-3 gap-0.5 sm:gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/60 h-[42px] items-center w-full min-w-0">
               {(['grouped', 'list', 'details'] as const).map(mode => (
                 <button
                   key={mode}
                   onClick={() => setViewMode(mode)}
-                  className={`w-full py-2.5 px-3 text-xs sm:text-sm font-extrabold capitalize transition-all text-center whitespace-nowrap flex items-center justify-center rounded-lg cursor-pointer ${
+                  className={`w-full h-full min-w-0 px-0.5 sm:px-1 text-[10.5px] sm:text-[11px] md:text-xs font-extrabold capitalize transition-all text-center flex items-center justify-center rounded-lg cursor-pointer ${
                     viewMode === mode 
                       ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-200/50 dark:border-slate-700' 
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                 >
-                  {mode === 'grouped' ? 'Grouped View' : mode === 'list' ? 'List View' : 'Detailed View'}
+                  <span className="w-full min-w-0 block text-center truncate">
+                    {mode === 'grouped' ? 'Grouped' : mode === 'list' ? 'List' : 'Details'}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Grouping Interval */}
-          <div>
+          {/* Time Grouping - Small Segmented Button Bar */}
+          <div className="min-w-0">
             <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
               Time Grouping
             </label>
-            <select
-              value={timeGroup}
-              onChange={(e) => setTimeGroup(e.target.value as TimeGroup)}
-              disabled={viewMode !== 'grouped'}
-              className="w-full text-xs font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl px-3 py-2.5 cursor-pointer focus:outline-none focus:border-emerald-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <option value="daily">Daily Groups</option>
-              <option value="week">Weekly Groups</option>
-              <option value="month">Monthly Groups</option>
-              <option value="year">Yearly Groups</option>
-            </select>
+            <div className={`grid grid-cols-4 gap-0.5 sm:gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/60 h-[42px] items-center w-full min-w-0 transition-opacity ${viewMode !== 'grouped' ? 'opacity-50 pointer-events-none' : ''}`}>
+              {[
+                { id: 'daily', label: 'Daily' },
+                { id: 'week', label: 'Weekly' },
+                { id: 'month', label: 'Monthly' },
+                { id: 'year', label: 'Yearly' }
+              ].map(g => (
+                <button
+                  key={g.id}
+                  disabled={viewMode !== 'grouped'}
+                  onClick={() => setTimeGroup(g.id as TimeGroup)}
+                  className={`w-full h-full min-w-0 px-0.5 sm:px-1 text-[9.5px] min-[400px]:text-[10px] sm:text-[10.5px] md:text-[11px] lg:text-xs font-extrabold tracking-tighter sm:tracking-tight capitalize transition-all text-center flex items-center justify-center rounded-lg cursor-pointer ${
+                    timeGroup === g.id 
+                      ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-200/50 dark:border-slate-700' 
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                  title={`${g.label} Grouping`}
+                >
+                  <span className="w-full min-w-0 block text-center truncate">
+                    {g.label}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Sort Order */}
-          <div>
+          <div className="min-w-0">
             <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
               Sort Sequence
             </label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="w-full text-xs font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl px-3 py-2.5 cursor-pointer focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full h-[42px] text-xs font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl px-3 cursor-pointer focus:outline-none focus:border-emerald-500 transition-colors"
             >
               <option value="date_desc">Newest First</option>
               <option value="date_asc">Oldest First</option>
