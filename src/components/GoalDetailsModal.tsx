@@ -31,6 +31,8 @@ export default function GoalDetailsModal({
   onEditTransaction,
   onDeleteTransaction
 }: GoalDetailsModalProps) {
+  const { themePalette } = useStore();
+  const isUbuntu = themePalette === 'ubuntu';
   const [isAllocating, setIsAllocating] = useState(false);
   const [allocateAccountId, setAllocateAccountId] = useState(accounts[0]?.id || 'default');
   const [allocateAmount, setAllocateAmount] = useState(goal ? goal.current : 0);
@@ -185,7 +187,9 @@ export default function GoalDetailsModal({
                   className={`h-full rounded-full transition-all duration-700 bg-gradient-to-r ${
                     isCompleted 
                       ? 'from-amber-400 via-yellow-400 to-amber-500 border-r border-amber-300 dark:border-amber-600/20 shadow-[0_0_8px_rgba(245,158,11,0.25)]' 
-                      : 'from-emerald-400 to-emerald-600'
+                      : isUbuntu
+                        ? 'from-[#E95420] to-[#FF7A45]'
+                        : 'from-emerald-400 to-emerald-600'
                   }`}
                   style={{ width: `${percentage}%` }}
                 ></div>
@@ -320,7 +324,7 @@ export default function GoalDetailsModal({
               {relatedTransactions.map(tx => {
                 const account = accounts.find(a => a.id === tx.account);
                 return (
-                  <div key={tx.id} className="p-3 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-100 dark:border-slate-800/60 flex justify-between items-center text-xs group transition-all duration-200">
+                  <div key={tx.id} className="transaction-card-interactive p-3 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-100 dark:border-slate-800/60 flex justify-between items-center text-xs group">
                     <div className="min-w-0 pr-2 flex-1">
                       <p className="font-semibold text-slate-700 dark:text-slate-200 truncate">{tx.description || 'Goal Funding Record'}</p>
                       <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400">

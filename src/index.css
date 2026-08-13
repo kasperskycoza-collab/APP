@@ -1,11 +1,599 @@
 @import "tailwindcss";
 @custom-variant dark (&:is(.dark *));
 
+:root {
+  /* Common Design Tokens */
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Ubuntu, Cantarell, sans-serif;
+  
+  /* Dream Theme (Default Classic Emerald & Slate) */
+  --theme-primary: #059669;
+  --theme-primary-hover: #047857;
+  --theme-primary-active: #065f46;
+  --theme-primary-soft: #ecfdf5;
+  --theme-primary-border: #a7f3d0;
+  --theme-primary-text: #065f46;
+  --theme-primary-ring: rgba(16, 185, 129, 0.4);
+  --theme-header-gradient: linear-gradient(135deg, #059669 0%, #047857 50%, #064e3b 100%);
+  --theme-app-bg: #f1f5f9;
+  --theme-surface-card: #ffffff;
+  --theme-surface-elevated: #f8fafc;
+  --theme-border: #e2e8f0;
+  --theme-text-primary: #0f172a;
+  --theme-text-secondary: #475569;
+  --theme-text-muted: #94a3b8;
+}
+
+.dark {
+  /* Dream Theme Dark */
+  --theme-primary: #10b981;
+  --theme-primary-hover: #059669;
+  --theme-primary-active: #047857;
+  --theme-primary-soft: rgba(6, 78, 59, 0.4);
+  --theme-primary-border: rgba(16, 185, 129, 0.3);
+  --theme-primary-text: #34d399;
+  --theme-primary-ring: rgba(16, 185, 129, 0.5);
+  --theme-header-gradient: linear-gradient(135deg, #047857 0%, #064e3b 60%, #022c22 100%);
+  --theme-app-bg: #0f172a;
+  --theme-surface-card: #1e293b;
+  --theme-surface-elevated: #334155;
+  --theme-border: #334155;
+  --theme-text-primary: #f8fafc;
+  --theme-text-secondary: #cbd5e1;
+  --theme-text-muted: #64748b;
+}
+
+/* ==========================================================================
+   UBUNTU 26.04 LTS DESIGN SYSTEM
+   Strict 8-Color Ubuntu Palette:
+   1. Ubuntu Orange:    #E95420 (Primary accent)
+   2. Ubuntu Aubergine: #77216F (Secondary accent)
+   3. Dark Aubergine:   #5E2750
+   4. Deep Purple:      #2C001E (Dark Background)
+   5. White:            #FFFFFF (Text & Light Surface)
+   6. Light Gray:       #EBEBEB (Light Background & Secondary)
+   7. Dark Gray:        #2D2D2D (Dark Surface)
+   8. Charcoal:         #383838 (Dark Elevated Surface)
+   ========================================================================== */
+
+.theme-ubuntu {
+  /* Ubuntu Light Mode */
+  --theme-primary: #E95420;
+  --theme-primary-hover: #E95420;
+  --theme-primary-active: #5E2750;
+  --theme-primary-soft: #EBEBEB;
+  --theme-primary-border: #EBEBEB;
+  --theme-primary-text: #E95420;
+  --theme-primary-ring: rgba(233, 84, 32, 0.45);
+  --theme-header-gradient: linear-gradient(135deg, #E95420 0%, #77216F 45%, #5E2750 80%, #2C001E 100%);
+  --theme-app-bg: #EBEBEB;
+  --theme-surface-card: #FFFFFF;
+  --theme-surface-elevated: #EBEBEB;
+  --theme-border: #EBEBEB;
+  --theme-text-primary: #2D2D2D;
+  --theme-text-secondary: #383838;
+  --theme-text-muted: #383838;
+}
+
+.theme-ubuntu.dark,
+.dark .theme-ubuntu,
+.theme-ubuntu .dark {
+  /* Ubuntu Dark Mode Specifics:
+     Background → #2C001E
+     Surface → #2D2D2D
+     Elevated surface → #383838
+     Primary accent → #E95420
+     Secondary accent → #77216F
+     Text → #FFFFFF
+  */
+  --theme-primary: #E95420;
+  --theme-primary-hover: #E95420;
+  --theme-primary-active: #77216F;
+  --theme-primary-soft: #383838;
+  --theme-primary-border: #383838;
+  --theme-primary-text: #E95420;
+  --theme-primary-ring: rgba(233, 84, 32, 0.5);
+  --theme-header-gradient: linear-gradient(135deg, #E95420 0%, #77216F 45%, #5E2750 80%, #2C001E 100%);
+  --theme-app-bg: #2C001E;
+  --theme-surface-card: #2D2D2D;
+  --theme-surface-elevated: #383838;
+  --theme-border: #383838;
+  --theme-text-primary: #FFFFFF;
+  --theme-text-secondary: #FFFFFF;
+  --theme-text-muted: #EBEBEB;
+}
+
 html, body, #root {
   max-width: 100%;
   overflow-x: hidden;
+  font-family: var(--font-sans);
 }
 
+/* ==========================================================================
+   UBUNTU THEME SPECIFIC ELEMENT OVERRIDES (High Contrast, Visible Rectangles & ZERO Green)
+   ========================================================================== */
+
+/* Ubuntu Theme Base Backgrounds & Surfaces */
+.theme-ubuntu {
+  background-color: #F0EEED;
+  color: #2D2D2D;
+}
+
+.theme-ubuntu.dark,
+.dark .theme-ubuntu,
+.theme-ubuntu .dark {
+  background-color: #2C001E !important;
+  color: #FFFFFF !important;
+}
+
+/* --- LIGHT MODE UBUNTU RECTANGLES & CARDS --- */
+.theme-ubuntu:not(.dark) .bg-white {
+  background-color: #FFFFFF !important;
+  border-color: #D5D0C7 !important;
+}
+
+.theme-ubuntu:not(.dark) .border-slate-100,
+.theme-ubuntu:not(.dark) .border-slate-200,
+.theme-ubuntu:not(.dark) .border-slate-300 {
+  border-color: #D5D0C7 !important;
+}
+
+.theme-ubuntu:not(.dark) .bg-slate-50,
+.theme-ubuntu:not(.dark) .bg-slate-100 {
+  background-color: #F8F7F5 !important;
+  border-color: #DFDCD6 !important;
+}
+
+/* Light Mode Soft Accent Rectangles */
+.theme-ubuntu:not(.dark) [class*="bg-emerald-50"],
+.theme-ubuntu:not(.dark) [class*="bg-emerald-100"],
+.theme-ubuntu:not(.dark) [class*="bg-green-50"],
+.theme-ubuntu:not(.dark) [class*="bg-green-100"],
+.theme-ubuntu:not(.dark) [class*="bg-teal-50"],
+.theme-ubuntu:not(.dark) [class*="bg-teal-100"] {
+  background-color: #FFF2EB !important;
+  border-color: #FCD2C2 !important;
+}
+
+.theme-ubuntu:not(.dark) [class*="border-emerald"],
+.theme-ubuntu:not(.dark) [class*="border-green"],
+.theme-ubuntu:not(.dark) [class*="border-teal"] {
+  border-color: #FCD2C2 !important;
+}
+
+.theme-ubuntu:not(.dark) [class*="bg-red-50"],
+.theme-ubuntu:not(.dark) [class*="bg-red-100"] {
+  background-color: #FDF0F7 !important;
+  border-color: #F3CFEA !important;
+}
+
+.theme-ubuntu:not(.dark) [class*="border-red"] {
+  border-color: #F3CFEA !important;
+}
+
+/* --- DARK MODE UBUNTU RECTANGLES & CARDS --- */
+.theme-ubuntu.dark .bg-slate-900,
+.dark .theme-ubuntu .bg-slate-900,
+.theme-ubuntu.dark .bg-slate-950,
+.dark .theme-ubuntu .bg-slate-950 {
+  background-color: #2C001E !important;
+}
+
+/* Primary surface cards: #2D2D2D with high-contrast #4D4D4D border and clear shape */
+.theme-ubuntu.dark .bg-slate-800,
+.dark .theme-ubuntu .bg-slate-800,
+.theme-ubuntu.dark .bg-white,
+.dark .theme-ubuntu .bg-white {
+  background-color: #2D2D2D !important;
+  border-color: #4D4D4D !important;
+}
+
+/* Nested elevated stat rectangles / right panels / inner boxes: #383838 (Charcoal) with prominent #585858 border */
+.theme-ubuntu.dark .bg-slate-700,
+.dark .theme-ubuntu .bg-slate-700,
+.theme-ubuntu.dark .bg-slate-600,
+.dark .theme-ubuntu .bg-slate-600,
+.theme-ubuntu.dark .bg-slate-100,
+.dark .theme-ubuntu .bg-slate-100,
+.theme-ubuntu.dark .bg-slate-50,
+.dark .theme-ubuntu .bg-slate-50,
+.theme-ubuntu.dark [class*="bg-slate-900/"],
+.dark .theme-ubuntu [class*="bg-slate-900/"],
+.theme-ubuntu.dark [class*="dark:bg-slate-900/"],
+.dark .theme-ubuntu [class*="dark:bg-slate-900/"],
+.theme-ubuntu.dark [class*="dark:bg-slate-900"],
+.dark .theme-ubuntu [class*="dark:bg-slate-900"],
+.theme-ubuntu.dark [class*="dark:bg-slate-800/"],
+.dark .theme-ubuntu [class*="dark:bg-slate-800/"] {
+  background-color: #383838 !important;
+  border-color: #585858 !important;
+}
+
+/* Top Banner Header Right Panels / Stat Rectangles (Income/Expense blocks on Gradient) */
+.theme-ubuntu.dark [class*="bg-white/10"],
+.dark .theme-ubuntu [class*="bg-white/10"],
+.theme-ubuntu.dark [class*="bg-white/20"],
+.dark .theme-ubuntu [class*="bg-white/20"],
+.theme-ubuntu [class*="bg-white/10"],
+.theme-ubuntu [class*="bg-white/20"] {
+  background-color: rgba(255, 255, 255, 0.16) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+.theme-ubuntu.dark .border-slate-700,
+.dark .theme-ubuntu .border-slate-700,
+.theme-ubuntu.dark .border-slate-800,
+.dark .theme-ubuntu .border-slate-800,
+.theme-ubuntu.dark .border-slate-600,
+.dark .theme-ubuntu .border-slate-600,
+.theme-ubuntu.dark [class*="border-slate-700/"],
+.dark .theme-ubuntu [class*="border-slate-700/"],
+.theme-ubuntu.dark [class*="dark:border-slate-700/"],
+.dark .theme-ubuntu [class*="dark:border-slate-700/"],
+.theme-ubuntu.dark [class*="dark:border-slate-800"],
+.dark .theme-ubuntu [class*="dark:border-slate-800"] {
+  border-color: #4D4D4D !important;
+}
+
+.theme-ubuntu.dark .border-slate-200,
+.dark .theme-ubuntu .border-slate-200,
+.theme-ubuntu.dark .border-slate-100,
+.dark .theme-ubuntu .border-slate-100,
+.theme-ubuntu.dark [class*="border-slate-200/"],
+.dark .theme-ubuntu [class*="border-slate-200/"],
+.theme-ubuntu.dark [class*="border-slate-100/"],
+.dark .theme-ubuntu [class*="border-slate-100/"] {
+  border-color: #585858 !important;
+}
+
+/* Dark Mode Tinted Stat Rectangles (Income/Orange, Expense/Aubergine, Goal/Amber) */
+.theme-ubuntu.dark [class*="bg-emerald"],
+.theme-ubuntu.dark [class*="bg-green"],
+.theme-ubuntu.dark [class*="bg-teal"],
+.dark .theme-ubuntu [class*="bg-emerald"],
+.dark .theme-ubuntu [class*="bg-green"],
+.dark .theme-ubuntu [class*="bg-teal"] {
+  background-color: rgba(233, 84, 32, 0.16) !important;
+}
+
+.theme-ubuntu.dark [class*="border-emerald"],
+.theme-ubuntu.dark [class*="border-green"],
+.theme-ubuntu.dark [class*="border-teal"],
+.dark .theme-ubuntu [class*="border-emerald"],
+.dark .theme-ubuntu [class*="border-green"],
+.dark .theme-ubuntu [class*="border-teal"] {
+  border-color: rgba(233, 84, 32, 0.5) !important;
+}
+
+.theme-ubuntu.dark [class*="bg-red"],
+.dark .theme-ubuntu [class*="bg-red"] {
+  background-color: rgba(119, 33, 111, 0.25) !important;
+}
+
+.theme-ubuntu.dark [class*="border-red"],
+.dark .theme-ubuntu [class*="border-red"] {
+  border-color: rgba(119, 33, 111, 0.6) !important;
+}
+
+.theme-ubuntu.dark [class*="bg-amber"],
+.dark .theme-ubuntu [class*="bg-amber"] {
+  background-color: rgba(245, 158, 11, 0.16) !important;
+}
+
+.theme-ubuntu.dark [class*="border-amber"],
+.dark .theme-ubuntu [class*="border-amber"] {
+  border-color: rgba(245, 158, 11, 0.5) !important;
+}
+
+.theme-ubuntu.dark [class*="bg-blue"],
+.dark .theme-ubuntu [class*="bg-blue"] {
+  background-color: rgba(119, 33, 111, 0.22) !important;
+}
+
+.theme-ubuntu.dark [class*="border-blue"],
+.dark .theme-ubuntu [class*="border-blue"] {
+  border-color: rgba(119, 33, 111, 0.55) !important;
+}
+
+/* Ubuntu Dark Text Hierarchy - Clear Color Differences & High Visibility */
+.theme-ubuntu.dark,
+.dark .theme-ubuntu,
+.theme-ubuntu.dark .text-slate-100,
+.dark .theme-ubuntu .text-slate-100,
+.theme-ubuntu.dark .text-slate-800,
+.dark .theme-ubuntu .text-slate-800,
+.theme-ubuntu.dark .text-slate-900,
+.dark .theme-ubuntu .text-slate-900 {
+  color: #FFFFFF !important;
+}
+
+.theme-ubuntu.dark .text-slate-200,
+.dark .theme-ubuntu .text-slate-200,
+.theme-ubuntu.dark .text-slate-300,
+.dark .theme-ubuntu .text-slate-300,
+.theme-ubuntu.dark .text-slate-600,
+.dark .theme-ubuntu .text-slate-600 {
+  color: #EBEBEB !important;
+}
+
+.theme-ubuntu.dark .text-slate-400,
+.dark .theme-ubuntu .text-slate-400,
+.theme-ubuntu.dark .text-slate-500,
+.dark .theme-ubuntu .text-slate-500 {
+  color: #D4D1CC !important;
+}
+
+/* ==========================================================================
+   STRICT OVERRIDE: ZERO GREEN IN UBUNTU THEME
+   Transform all emerald/green/teal tokens to Ubuntu Orange (#E95420),
+   Ubuntu Aubergine (#77216F), Dark Gray (#2D2D2D), Charcoal (#383838), or White (#FFFFFF).
+   ========================================================================== */
+
+/* Catch-all text overrides for zero green in Ubuntu theme */
+.theme-ubuntu [class*="text-emerald"],
+.theme-ubuntu [class*="text-green"],
+.theme-ubuntu [class*="text-teal"] {
+  color: #E95420 !important;
+}
+
+.theme-ubuntu.dark [class*="text-emerald"],
+.theme-ubuntu.dark [class*="text-green"],
+.theme-ubuntu.dark [class*="text-teal"],
+.dark .theme-ubuntu [class*="text-emerald"],
+.dark .theme-ubuntu [class*="text-green"],
+.dark .theme-ubuntu [class*="text-teal"] {
+  color: #E95420 !important;
+}
+
+/* Subtle light text variants inside banners/gradients */
+.theme-ubuntu .text-emerald-100,
+.theme-ubuntu .text-emerald-200,
+.theme-ubuntu.dark .text-emerald-100,
+.theme-ubuntu.dark .text-emerald-200,
+.dark .theme-ubuntu .text-emerald-100,
+.dark .theme-ubuntu .text-emerald-200 {
+  color: #FFFFFF !important;
+}
+
+/* Catch-all solid buttons and accents for zero green */
+.theme-ubuntu .bg-emerald-500,
+.theme-ubuntu .bg-emerald-600,
+.theme-ubuntu .bg-emerald-700,
+.theme-ubuntu .bg-green-500,
+.theme-ubuntu .bg-green-600,
+.theme-ubuntu .bg-green-700,
+.theme-ubuntu .bg-teal-500,
+.theme-ubuntu .bg-teal-600,
+.theme-ubuntu .bg-teal-700 {
+  background-color: #E95420 !important;
+  color: #FFFFFF !important;
+}
+
+.theme-ubuntu .bg-emerald-500:hover,
+.theme-ubuntu .bg-emerald-600:hover,
+.theme-ubuntu .bg-emerald-700:hover,
+.theme-ubuntu .bg-green-500:hover,
+.theme-ubuntu .bg-green-600:hover,
+.theme-ubuntu .bg-teal-500:hover,
+.theme-ubuntu .bg-teal-600:hover {
+  background-color: #E95420 !important;
+  filter: brightness(0.92);
+}
+
+/* Solid accent buttons in dark mode remain Primary Accent #E95420 */
+.theme-ubuntu.dark .bg-emerald-500,
+.theme-ubuntu.dark .bg-emerald-600,
+.theme-ubuntu.dark .bg-emerald-700,
+.dark .theme-ubuntu .bg-emerald-500,
+.dark .theme-ubuntu .bg-emerald-600,
+.dark .theme-ubuntu .bg-emerald-700 {
+  background-color: #E95420 !important;
+  color: #FFFFFF !important;
+}
+
+.theme-ubuntu .border-emerald-500,
+.theme-ubuntu .border-emerald-600,
+.theme-ubuntu.dark .border-emerald-500,
+.theme-ubuntu.dark .border-emerald-600,
+.dark .theme-ubuntu .border-emerald-500,
+.dark .theme-ubuntu .border-emerald-600 {
+  border-color: #E95420 !important;
+}
+
+/* Rings & Focus */
+.theme-ubuntu [class*="ring-emerald"],
+.theme-ubuntu [class*="ring-green"],
+.theme-ubuntu [class*="ring-teal"] {
+  --tw-ring-color: #E95420 !important;
+}
+
+/* Header & Banner Gradients with Ubuntu Orange, Ubuntu Aubergine & Deep Purple */
+.theme-ubuntu .from-emerald-600.to-emerald-800,
+.theme-ubuntu .from-emerald-800.to-teal-900,
+.theme-ubuntu .from-emerald-500.to-emerald-700,
+.theme-ubuntu .from-emerald-600.via-emerald-700.to-emerald-800,
+.theme-ubuntu.dark .from-emerald-600.to-emerald-800,
+.theme-ubuntu.dark .from-emerald-800.to-teal-900,
+.theme-ubuntu.dark .from-emerald-500.to-emerald-700,
+.theme-ubuntu.dark .from-emerald-600.via-emerald-700.to-emerald-800,
+.dark .theme-ubuntu .from-emerald-600.to-emerald-800,
+.dark .theme-ubuntu .from-emerald-800.to-teal-900,
+.dark .theme-ubuntu .from-emerald-500.to-emerald-700,
+.dark .theme-ubuntu .from-emerald-600.via-emerald-700.to-emerald-800 {
+  background-image: linear-gradient(135deg, #E95420 0%, #77216F 45%, #5E2750 80%, #2C001E 100%) !important;
+}
+
+/* Status indicator dots */
+.theme-ubuntu .bg-emerald-300,
+.theme-ubuntu .bg-emerald-400,
+.theme-ubuntu .bg-emerald-500,
+.theme-ubuntu.dark .bg-emerald-300,
+.theme-ubuntu.dark .bg-emerald-400,
+.theme-ubuntu.dark .bg-emerald-500 {
+  background-color: #E95420 !important;
+}
+
+/* Focus and input states for Ubuntu Theme */
+.theme-ubuntu input:focus,
+.theme-ubuntu select:focus,
+.theme-ubuntu textarea:focus {
+  border-color: #E95420 !important;
+  outline-color: #E95420 !important;
+}
+
+/* Focus and input states for Ubuntu Theme */
+.theme-ubuntu input:focus,
+.theme-ubuntu select:focus,
+.theme-ubuntu textarea:focus {
+  border-color: #E95420 !important;
+  outline-color: #E95420 !important;
+}
+
+/* Ubuntu Light Mode Neutrals (Strictly 8 Colors) */
+.theme-ubuntu:not(.dark) .bg-slate-100,
+.theme-ubuntu:not(.dark) .bg-slate-50 {
+  background-color: #F8F7F5 !important;
+}
+
+.theme-ubuntu:not(.dark) .border-slate-200,
+.theme-ubuntu:not(.dark) .border-slate-100 {
+  border-color: #D5D0C7 !important;
+}
+
+.theme-ubuntu:not(.dark) .text-slate-900,
+.theme-ubuntu:not(.dark) .text-slate-800,
+.theme-ubuntu:not(.dark) .text-slate-700 {
+  color: #2D2D2D !important;
+}
+
+.theme-ubuntu:not(.dark) .text-slate-600,
+.theme-ubuntu:not(.dark) .text-slate-500,
+.theme-ubuntu:not(.dark) .text-slate-400 {
+  color: #383838 !important;
+}
+
+/* Ubuntu Light Mode Graph Details (Axes, Ticks, Labels, Grids in Dark Grey) */
+.theme-ubuntu:not(.dark) .recharts-cartesian-grid line {
+  stroke: #D5D0C7 !important;
+}
+
+.theme-ubuntu:not(.dark) .recharts-text,
+.theme-ubuntu:not(.dark) .recharts-cartesian-axis-tick text,
+.theme-ubuntu:not(.dark) .recharts-cartesian-axis-tick-value,
+.theme-ubuntu:not(.dark) .recharts-label,
+.theme-ubuntu:not(.dark) .recharts-legend-item-text {
+  fill: #2D2D2D !important;
+  color: #2D2D2D !important;
+}
+
+.theme-ubuntu:not(.dark) .recharts-default-tooltip {
+  background-color: #FFFFFF !important;
+  border: 1px solid #2D2D2D !important;
+  color: #2D2D2D !important;
+  box-shadow: 0 4px 14px rgba(45, 45, 45, 0.12) !important;
+}
+
+.theme-ubuntu:not(.dark) .recharts-tooltip-item,
+.theme-ubuntu:not(.dark) .recharts-tooltip-label {
+  color: #2D2D2D !important;
+}
+
+/* Ubuntu Dark Mode Add Saving Goal Rectangles (#EBEBEB Light Grey) */
+.theme-ubuntu.dark .btn-add-saving-goal,
+.dark .theme-ubuntu .btn-add-saving-goal,
+.theme-ubuntu.dark button.btn-add-saving-goal,
+.dark .theme-ubuntu button.btn-add-saving-goal {
+  background-color: #EBEBEB !important;
+  color: #2D2D2D !important;
+  border-color: #EBEBEB !important;
+}
+
+.theme-ubuntu.dark .btn-add-saving-goal:hover,
+.dark .theme-ubuntu .btn-add-saving-goal:hover,
+.theme-ubuntu.dark button.btn-add-saving-goal:hover,
+.dark .theme-ubuntu button.btn-add-saving-goal:hover {
+  background-color: #FFFFFF !important;
+  color: #2D2D2D !important;
+}
+
+/* Interactive Transaction Card - Mode Rectangle Style Hover/Focus */
+.transaction-card-interactive {
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Dream / Classic Theme Hover */
+.theme-dream:not(.dark) .transaction-card-interactive:hover,
+:not(.dark) .theme-dream .transaction-card-interactive:hover,
+.theme-dream:not(.dark) .transaction-card-interactive:focus-within,
+:not(.dark) .theme-dream .transaction-card-interactive:focus-within {
+  background-color: rgba(236, 253, 245, 0.85) !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.16) !important;
+  transform: translateY(-1px);
+}
+
+.theme-dream.dark .transaction-card-interactive:hover,
+.dark .theme-dream .transaction-card-interactive:hover,
+.theme-dream.dark .transaction-card-interactive:focus-within,
+.dark .theme-dream .transaction-card-interactive:focus-within {
+  background-color: rgba(6, 78, 59, 0.4) !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.22) !important;
+  transform: translateY(-1px);
+}
+
+/* Ubuntu Theme Light Mode Hover */
+.theme-ubuntu:not(.dark) .transaction-card-interactive:hover,
+:not(.dark) .theme-ubuntu .transaction-card-interactive:hover,
+.theme-ubuntu:not(.dark) .transaction-card-interactive:focus-within,
+:not(.dark) .theme-ubuntu .transaction-card-interactive:focus-within {
+  background-color: #FFF2EB !important;
+  border-color: #E95420 !important;
+  box-shadow: 0 4px 14px rgba(233, 84, 32, 0.2) !important;
+  transform: translateY(-1px);
+}
+
+/* Ubuntu Theme Dark Mode Hover */
+.theme-ubuntu.dark .transaction-card-interactive:hover,
+.dark .theme-ubuntu .transaction-card-interactive:hover,
+.theme-ubuntu.dark .transaction-card-interactive:focus-within,
+.dark .theme-ubuntu .transaction-card-interactive:focus-within {
+  background-color: #383838 !important;
+  border-color: #E95420 !important;
+  box-shadow: 0 4px 14px rgba(233, 84, 32, 0.28) !important;
+  transform: translateY(-1px);
+}
+
+/* Eradicate focus borders, outlines and tap highlights on Recharts & Pie circles */
+.recharts-wrapper,
+.recharts-surface,
+.recharts-pie,
+.recharts-pie-sector,
+.recharts-sector,
+.recharts-cell,
+.recharts-bar-rectangle,
+.recharts-layer,
+svg.recharts-surface,
+svg.recharts-surface * {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-focus-ring-color: transparent !important;
+  user-select: none !important;
+}
+
+.recharts-pie-sector:focus,
+.recharts-sector:focus,
+.recharts-cell:focus,
+.recharts-pie:focus,
+.recharts-wrapper:focus,
+.recharts-surface:focus,
+path.recharts-sector:focus,
+path.recharts-pie-sector:focus {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Scrollbar styles */
 @layer utilities {
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
@@ -20,4 +608,8 @@ html, body, #root {
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     @apply bg-emerald-500 rounded-full;
   }
+  .theme-ubuntu .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #E95420 !important;
+  }
 }
+

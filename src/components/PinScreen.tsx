@@ -8,7 +8,7 @@ interface PinScreenProps {
 }
 
 export default function PinScreen({ onSuccess, onBack }: PinScreenProps) {
-  const { pin, darkMode, toggleDarkMode } = useStore();
+  const { pin, darkMode, themePalette, themeMode, toggleDarkMode } = useStore();
   const [input, setInput] = useState('');
   const [error, setError] = useState(false);
 
@@ -37,7 +37,7 @@ export default function PinScreen({ onSuccess, onBack }: PinScreenProps) {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center p-5 relative transition-colors duration-300 ${darkMode ? 'dark bg-slate-900 text-slate-100' : 'bg-slate-50 md:bg-slate-100 text-slate-900'}`}>
+    <div className={`min-h-screen flex flex-col items-center justify-center p-5 relative transition-colors duration-300 ${darkMode ? 'dark bg-slate-900 text-slate-100' : 'bg-slate-50 md:bg-slate-100 text-slate-900'} ${themePalette === 'ubuntu' ? 'theme-ubuntu' : 'theme-dream'}`}>
       
       {/* Top Controls: Back & Theme Toggle (Theme toggle desktop-only) */}
       <div className="absolute top-5 left-5 right-5 flex justify-between items-center z-10">

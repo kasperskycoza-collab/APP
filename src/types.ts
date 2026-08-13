@@ -38,6 +38,18 @@ export interface RegisteredUser {
   registeredAt?: string;
 }
 
+export type ThemePalette = 'dream' | 'ubuntu';
+export type ThemeMode = 'light' | 'dark' | 'system';
+export type AppLanguage = 'en' | 'sw';
+
+export interface NotificationSettings {
+  reminders: boolean;
+  goalAlerts: boolean;
+  budgetAlerts: boolean;
+  weeklySummary: boolean;
+  pushEnabled: boolean;
+}
+
 export interface AppState {
   user: { id?: string; name: string; email: string; firstName?: string; surname?: string; photoURL?: string } | null;
   registeredUsers: RegisteredUser[];
@@ -46,10 +58,14 @@ export interface AppState {
   transactions: Transaction[];
   goals: Goal[];
   currency: string;
+  language: AppLanguage;
+  notifications: NotificationSettings;
   isLoggedIn: boolean;
   pinLock: boolean;
   pin: string;
   darkMode: boolean;
+  themePalette: ThemePalette;
+  themeMode: ThemeMode;
   expenseCategories: string[];
   incomeCategories: string[];
 }

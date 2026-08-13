@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AppState, Transaction, Goal, Account } from './types';
+import { AppState, Transaction, Goal, Account, AppLanguage, NotificationSettings } from './types';
 
 interface StoreState extends AppState {
   login: (userInfo: { email: string; name?: string; firstName?: string; surname?: string; photoURL?: string; id?: string }) => void;
@@ -12,10 +12,14 @@ interface StoreState extends AppState {
   deleteTransaction: (id: number) => void;
   addGoal: (goal: Omit<Goal, 'id'>) => void;
   setCurrency: (currency: string) => void;
+  setLanguage: (language: AppLanguage) => void;
+  setNotificationSettings: (settings: Partial<NotificationSettings>) => void;
   editGoal: (id: number, goal: Partial<Omit<Goal, 'id'>>) => void;
   deleteGoal: (id: number) => void;
   updateGoalStatus: (id: number, amount: number, accountId?: string, date?: string) => void;
   toggleDarkMode: () => void;
+  setThemePalette: (palette: 'dream' | 'ubuntu') => void;
+  setThemeMode: (mode: 'light' | 'dark' | 'system') => void;
   togglePinLock: () => void;
   setPin: (pin: string) => void;
   importData: (data: string) => boolean;
@@ -33,10 +37,20 @@ export const useStore = create<StoreState>()(
       transactions: [],
       goals: [],
       currency: 'USD',
+      language: 'en',
+      notifications: {
+        reminders: true,
+        goalAlerts: true,
+        budgetAlerts: true,
+        weeklySummary: false,
+        pushEnabled: true,
+      },
       isLoggedIn: false,
       pinLock: false,
       pin: '',
       darkMode: false,
+      themePalette: 'dream',
+      themeMode: 'light',
       expenseCategories: ['food', 'transport', 'rent', 'shopping', 'bills', 'health', 'education', 'transfer', 'other'],
       incomeCategories: ['salary', 'freelance', 'investments', 'gifts', 'transfer', 'other'],
 
@@ -422,7 +436,22 @@ export const useStore = create<StoreState>()(
       },
 
       setCurrency: (currency) => set({ currency }),
-      toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
+      setLanguage: (language) => set({ language }),
+      setNotificationSettings: (newSettings) => set((state) => ({
+        notifications: { ...state.notifications, ...newSettings }
+      })),
+      setThemePalette: (themePalette) => set({ themePalette }),
+      setThemeMode: (themeMode) => set({ 
+        themeMode,
+        darkMode: themeMode === 'dark' ? true : themeMode === 'light' ? false : (typeof window !== 'undefined' ? window.matchMedia('(prefers-color-scheme: dark)').matches : false)
+      }),
+      toggleDarkMode: () => set((state) => {
+        const nextDark = !state.darkMode;
+        return { 
+          darkMode: nextDark,
+          themeMode: nextDark ? 'dark' : 'light'
+        };
+      }),
       togglePinLock: () => set((state) => ({ pinLock: !state.pinLock })),
       setPin: (pin) => set({ pin }),
       importData: (dataStr: string) => {
@@ -464,6 +493,13 @@ export const useStore = create<StoreState>()(
           goals: Array.isArray(ps.goals) ? ps.goals : (currentState.goals || []),
           expenseCategories: Array.isArray(ps.expenseCategories) ? ps.expenseCategories : currentState.expenseCategories,
           incomeCategories: Array.isArray(ps.incomeCategories) ? ps.incomeCategories : currentState.incomeCategories,
+          language: ps.language || currentState.language || 'en',
+          notifications: {
+            ...currentState.notifications,
+            ...(ps.notifications || {})
+          },
+          themePalette: ps.themePalette || currentState.themePalette || 'dream',
+          themeMode: ps.themeMode || (ps.darkMode ? 'dark' : 'light') || currentState.themeMode || 'light',
         };
       }
     }

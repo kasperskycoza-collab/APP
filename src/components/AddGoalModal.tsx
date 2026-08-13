@@ -8,7 +8,8 @@ interface AddGoalModalProps {
 }
 
 export default function AddGoalModal({ isOpen, onClose }: AddGoalModalProps) {
-  const { addGoal } = useStore();
+  const { addGoal, themePalette } = useStore();
+  const isUbuntu = themePalette === 'ubuntu';
 
   const [name, setName] = useState('');
   const [target, setTarget] = useState('');
@@ -133,7 +134,11 @@ export default function AddGoalModal({ isOpen, onClose }: AddGoalModalProps) {
             <div className="pt-4 pb-2">
               <button
                 type="submit"
-                className="w-full bg-amber-500 hover:bg-amber-600 font-bold py-4 rounded-xl text-white shadow-lg shadow-amber-500/30 transition-transform active:scale-[0.98]"
+                className={`w-full font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-[0.98] btn-add-saving-goal cursor-pointer ${
+                  isUbuntu
+                    ? 'bg-[#EBEBEB] dark:bg-[#EBEBEB] text-[#2D2D2D] dark:text-[#2D2D2D] hover:bg-white dark:hover:bg-white border border-[#D5D0C7] dark:border-[#EBEBEB]'
+                    : 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/30'
+                }`}
               >
                 Create Goal
               </button>

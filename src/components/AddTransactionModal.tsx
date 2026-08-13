@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../store';
+import { useTranslation } from '../useTranslation';
 import { X } from 'lucide-react';
 import { evaluateMath } from '../utils';
 
@@ -12,7 +13,9 @@ interface AddTransactionModalProps {
 export default function AddTransactionModal({ isOpen, onClose, initialType = 'expense' }: AddTransactionModalProps) {
   const store = useStore();
   const { addTransaction, accounts } = store;
+  const { t, language, getCategoryName, getMethodName } = useTranslation();
 
+  const isSwahili = language === 'sw';
   const [type, setType] = useState<'income' | 'expense'>(initialType);
   
   useEffect(() => {
@@ -48,15 +51,15 @@ export default function AddTransactionModal({ isOpen, onClose, initialType = 'ex
 
     const parsedAmount = evaluateMath(amount);
     if (parsedAmount === null || parsedAmount <= 0) {
-      setError('Please enter a valid amount');
+      setError(isSwahili ? 'Tafadhali weka kiasi sahihi' : 'Please enter a valid amount');
       return;
     }
     if (!category) {
-      setError('Please select a category');
+      setError(isSwahili ? 'Tafadhali chagua kundi' : 'Please select a category');
       return;
     }
     if (!description.trim()) {
-      setError('Please enter a description');
+      setError(isSwahili ? 'Tafadhali weka maelezo' : 'Please enter a description');
       return;
     }
 
@@ -73,7 +76,6 @@ export default function AddTransactionModal({ isOpen, onClose, initialType = 'ex
     });
 
     onClose();
-    // Reset form
     setAmount('');
     setCategory('');
     setDescription('');
@@ -85,9 +87,9 @@ export default function AddTransactionModal({ isOpen, onClose, initialType = 'ex
   return (
     <div className="fixed inset-0 bg-slate-900/50 z-[60] flex items-center justify-center p-5 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white dark:bg-slate-800 w-full sm:max-w-md rounded-2xl flex flex-col max-h-[85vh] shadow-2xl animate-in zoom-in-95 duration-300">
-        <div className="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-800 dark:border-slate-800 flex-shrink-0">
-          <h2 className="font-bold text-lg text-slate-800 dark:text-slate-100">Add Transaction</h2>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 transition-colors">
+        <div className="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
+          <h2 className="font-bold text-lg text-slate-800 dark:text-slate-100">{t('addTransaction')}</h2>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 transition-colors cursor-pointer">
             <X size={20} />
           </button>
         </div>
@@ -100,36 +102,36 @@ export default function AddTransactionModal({ isOpen, onClose, initialType = 'ex
               <button
                 type="button"
                 onClick={() => { setType('income'); setCategory(''); }}
-                className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${type === 'income' ? 'bg-white dark:bg-slate-800 text-emerald-600 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+                className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors cursor-pointer ${type === 'income' ? 'bg-white dark:bg-slate-800 text-emerald-600 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
               >
-                Income
+                {t('income')}
               </button>
               <button
                 type="button"
                 onClick={() => { setType('expense'); setCategory(''); }}
-                className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${type === 'expense' ? 'bg-white dark:bg-slate-800 text-red-600 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+                className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors cursor-pointer ${type === 'expense' ? 'bg-white dark:bg-slate-800 text-red-600 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
               >
-                Expense
+                {t('expense')}
               </button>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">Amount</label>
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">{t('amount')}</label>
               <input
                 type="text"
-                placeholder="0.00 (e.g. 50 + 20)"
+                placeholder={isSwahili ? "0.00 (mf. 5000 + 2000)" : "0.00 (e.g. 50 + 20)"}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 onBlur={() => {
                   const result = evaluateMath(amount);
                   if (result !== null) setAmount(result.toString());
                 }}
-                className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:border-emerald-500 focus:outline-none transition-colors text-lg"
+                className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:border-emerald-500 focus:outline-none transition-colors text-lg bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">Category</label>
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">{t('category')}</label>
               <div className="grid grid-cols-3 gap-2">
                 {categories.map((cat) => (
                   <div
@@ -137,59 +139,59 @@ export default function AddTransactionModal({ isOpen, onClose, initialType = 'ex
                     onClick={() => setCategory(cat)}
                     className={`border-2 p-2 rounded-xl text-center cursor-pointer text-xs font-semibold capitalize transition-all ${
                       category === cat
-                        ? type === 'income' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700' : 'border-red-500 bg-red-50 dark:bg-red-900/30 text-red-700'
+                        ? type === 'income' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'border-red-500 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300'
                         : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:border-emerald-200 hover:bg-slate-50 dark:bg-slate-900'
                     }`}
                   >
-                    {cat}
+                    {getCategoryName(cat)}
                   </div>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">Description</label>
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">{t('description')}</label>
               <input
                 type="text"
-                placeholder="What was this for?"
+                placeholder={isSwahili ? "Ilikuwa ya nini?" : "What was this for?"}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:border-emerald-500 focus:outline-none transition-colors"
+                className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:border-emerald-500 focus:outline-none transition-colors bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">Date</label>
+                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">{t('date')}</label>
                 <input
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:border-emerald-500 focus:outline-none transition-colors text-sm"
+                  className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:border-emerald-500 focus:outline-none transition-colors text-sm bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">Method</label>
+                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">{t('paymentMethod')}</label>
                 <select
                   value={method}
                   onChange={(e) => setMethod(e.target.value)}
-                  className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:border-emerald-500 focus:outline-none transition-colors text-sm bg-white dark:bg-slate-800"
+                  className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:border-emerald-500 focus:outline-none transition-colors text-sm bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 cursor-pointer"
                 >
-                  <option value="cash">Cash</option>
-                  <option value="bank">Bank Transfer</option>
-                  <option value="mobile">Mobile Money</option>
-                  <option value="card">Card</option>
-                  <option value="other">Other</option>
+                  <option value="cash">{getMethodName('cash')}</option>
+                  <option value="bank">{getMethodName('bank')}</option>
+                  <option value="mobile">{getMethodName('mobile')}</option>
+                  <option value="card">{getMethodName('card')}</option>
+                  <option value="other">{getMethodName('other')}</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">Account</label>
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">{t('account')}</label>
               <select
                 value={account}
                 onChange={(e) => setAccount(e.target.value)}
-                className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:border-emerald-500 focus:outline-none transition-colors text-sm bg-white dark:bg-slate-800"
+                className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:border-emerald-500 focus:outline-none transition-colors text-sm bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 cursor-pointer"
               >
                 {accounts.map(acc => (
                   <option key={acc.id} value={acc.id}>{acc.name}</option>
@@ -203,20 +205,22 @@ export default function AddTransactionModal({ isOpen, onClose, initialType = 'ex
                 id="recurring"
                 checked={recurring}
                 onChange={(e) => setRecurring(e.target.checked)}
-                className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
               />
               <div className="flex-1">
-                <label htmlFor="recurring" className="text-sm font-semibold text-slate-700 dark:text-slate-300">Make this recurring</label>
+                <label htmlFor="recurring" className="text-sm font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
+                  {isSwahili ? 'Fanya iwe ya mara kwa mara' : 'Make this recurring'}
+                </label>
                 {recurring && (
                   <select
                     value={frequency}
                     onChange={(e) => setFrequency(e.target.value)}
-                    className="mt-2 w-full border border-slate-200 dark:border-slate-700 rounded-lg p-2 focus:border-emerald-500 focus:outline-none text-sm bg-white dark:bg-slate-800"
+                    className="mt-2 w-full border border-slate-200 dark:border-slate-700 rounded-lg p-2 focus:border-emerald-500 focus:outline-none text-sm bg-white dark:bg-slate-800 cursor-pointer"
                   >
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="yearly">Yearly</option>
+                    <option value="daily">{isSwahili ? 'Kila Siku' : 'Daily'}</option>
+                    <option value="weekly">{isSwahili ? 'Kila Wiki' : 'Weekly'}</option>
+                    <option value="monthly">{isSwahili ? 'Kila Mwezi' : 'Monthly'}</option>
+                    <option value="yearly">{isSwahili ? 'Kila Mwaka' : 'Yearly'}</option>
                   </select>
                 )}
               </div>
@@ -225,11 +229,11 @@ export default function AddTransactionModal({ isOpen, onClose, initialType = 'ex
             <div className="pt-4 pb-2">
               <button
                 type="submit"
-                className={`w-full font-bold py-4 rounded-xl text-white shadow-lg transition-transform active:scale-[0.98] ${
+                className={`w-full font-bold py-4 rounded-xl text-white shadow-lg transition-transform active:scale-[0.98] cursor-pointer ${
                   type === 'income' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/30' : 'bg-red-600 hover:bg-red-700 shadow-red-500/30'
                 }`}
               >
-                Save Transaction
+                {t('save')} {t('navTransactions')}
               </button>
             </div>
           </form>
