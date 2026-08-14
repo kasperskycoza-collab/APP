@@ -171,39 +171,39 @@ html, body, #root {
 }
 
 /* --- DARK MODE UBUNTU RECTANGLES & CARDS --- */
-.theme-ubuntu.dark .bg-slate-900,
-.dark .theme-ubuntu .bg-slate-900,
-.theme-ubuntu.dark .bg-slate-950,
-.dark .theme-ubuntu .bg-slate-950 {
+.theme-ubuntu.dark .bg-slate-900:not(.fixed):not([class*="fixed"]),
+.dark .theme-ubuntu .bg-slate-900:not(.fixed):not([class*="fixed"]),
+.theme-ubuntu.dark .bg-slate-950:not(.fixed):not([class*="fixed"]),
+.dark .theme-ubuntu .bg-slate-950:not(.fixed):not([class*="fixed"]) {
   background-color: #2C001E !important;
 }
 
 /* Primary surface cards: #2D2D2D with high-contrast #4D4D4D border and clear shape */
-.theme-ubuntu.dark .bg-slate-800,
-.dark .theme-ubuntu .bg-slate-800,
-.theme-ubuntu.dark .bg-white,
-.dark .theme-ubuntu .bg-white {
+.theme-ubuntu.dark .bg-slate-800:not(.fixed):not([class*="fixed"]),
+.dark .theme-ubuntu .bg-slate-800:not(.fixed):not([class*="fixed"]),
+.theme-ubuntu.dark .bg-white:not(.fixed):not([class*="fixed"]),
+.dark .theme-ubuntu .bg-white:not(.fixed):not([class*="fixed"]) {
   background-color: #2D2D2D !important;
   border-color: #4D4D4D !important;
 }
 
 /* Nested elevated stat rectangles / right panels / inner boxes: #383838 (Charcoal) with prominent #585858 border */
-.theme-ubuntu.dark .bg-slate-700,
-.dark .theme-ubuntu .bg-slate-700,
-.theme-ubuntu.dark .bg-slate-600,
-.dark .theme-ubuntu .bg-slate-600,
-.theme-ubuntu.dark .bg-slate-100,
-.dark .theme-ubuntu .bg-slate-100,
-.theme-ubuntu.dark .bg-slate-50,
-.dark .theme-ubuntu .bg-slate-50,
-.theme-ubuntu.dark [class*="bg-slate-900/"],
-.dark .theme-ubuntu [class*="bg-slate-900/"],
-.theme-ubuntu.dark [class*="dark:bg-slate-900/"],
-.dark .theme-ubuntu [class*="dark:bg-slate-900/"],
-.theme-ubuntu.dark [class*="dark:bg-slate-900"],
-.dark .theme-ubuntu [class*="dark:bg-slate-900"],
-.theme-ubuntu.dark [class*="dark:bg-slate-800/"],
-.dark .theme-ubuntu [class*="dark:bg-slate-800/"] {
+.theme-ubuntu.dark .bg-slate-700:not(.fixed):not([class*="fixed"]),
+.dark .theme-ubuntu .bg-slate-700:not(.fixed):not([class*="fixed"]),
+.theme-ubuntu.dark .bg-slate-600:not(.fixed):not([class*="fixed"]),
+.dark .theme-ubuntu .bg-slate-600:not(.fixed):not([class*="fixed"]),
+.theme-ubuntu.dark .bg-slate-100:not(.fixed):not([class*="fixed"]),
+.dark .theme-ubuntu .bg-slate-100:not(.fixed):not([class*="fixed"]),
+.theme-ubuntu.dark .bg-slate-50:not(.fixed):not([class*="fixed"]),
+.dark .theme-ubuntu .bg-slate-50:not(.fixed):not([class*="fixed"]),
+.theme-ubuntu.dark [class*="bg-slate-900/"]:not(.fixed):not([class*="fixed"]),
+.dark .theme-ubuntu [class*="bg-slate-900/"]:not(.fixed):not([class*="fixed"]),
+.theme-ubuntu.dark [class*="dark:bg-slate-900/"]:not(.fixed):not([class*="fixed"]),
+.dark .theme-ubuntu [class*="dark:bg-slate-900/"]:not(.fixed):not([class*="fixed"]),
+.theme-ubuntu.dark [class*="dark:bg-slate-900"]:not(.fixed):not([class*="fixed"]),
+.dark .theme-ubuntu [class*="dark:bg-slate-900"]:not(.fixed):not([class*="fixed"]),
+.theme-ubuntu.dark [class*="dark:bg-slate-800/"]:not(.fixed):not([class*="fixed"]),
+.dark .theme-ubuntu [class*="dark:bg-slate-800/"]:not(.fixed):not([class*="fixed"]) {
   background-color: #383838 !important;
   border-color: #585858 !important;
 }
@@ -215,8 +215,17 @@ html, body, #root {
 .dark .theme-ubuntu [class*="bg-white/20"],
 .theme-ubuntu [class*="bg-white/10"],
 .theme-ubuntu [class*="bg-white/20"] {
-  background-color: rgba(255, 255, 255, 0.16) !important;
+  background-color: rgba(0, 0, 0, 0.3) !important;
   border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+/* Dream Theme Dark Mode Banner Right Panels */
+.theme-dream.dark [class*="bg-white/10"],
+.dark .theme-dream [class*="bg-white/10"],
+.theme-dream.dark [class*="bg-white/20"],
+.dark .theme-dream [class*="bg-white/20"] {
+  background-color: rgba(0, 0, 0, 0.35) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
 }
 
 .theme-ubuntu.dark .border-slate-700,
@@ -563,6 +572,21 @@ html, body, #root {
   transform: translateY(-1px);
 }
 
+/* Recharts Cartesian Grid Lines */
+.theme-ubuntu.dark .recharts-cartesian-grid-horizontal line,
+.dark .theme-ubuntu .recharts-cartesian-grid-horizontal line {
+  stroke: #737373 !important;
+  stroke-dasharray: 3 3 !important;
+  stroke-opacity: 0.9 !important;
+}
+
+.theme-dream.dark .recharts-cartesian-grid-horizontal line,
+.dark .theme-dream .recharts-cartesian-grid-horizontal line {
+  stroke: #475569 !important;
+  stroke-dasharray: 3 3 !important;
+  stroke-opacity: 0.8 !important;
+}
+
 /* Eradicate focus borders, outlines and tap highlights on Recharts & Pie circles */
 .recharts-wrapper,
 .recharts-surface,
@@ -591,6 +615,48 @@ path.recharts-pie-sector:focus {
   outline: none !important;
   border: none !important;
   box-shadow: none !important;
+}
+
+/* Universal Modal & Dialog Popup Backdrop Blur across all themes */
+.fixed.inset-0[class*="backdrop-blur"],
+.fixed.inset-0.z-40,
+.fixed.inset-0.z-50,
+.fixed.inset-0.z-\[60\],
+.fixed.inset-0.z-\[70\],
+.fixed.inset-0.z-\[100\],
+.fixed.inset-0.z-\[110\],
+.fixed.inset-0.z-\[120\],
+div[class*="fixed inset-0"][class*="bg-slate-"],
+div[class*="fixed inset-0"][class*="bg-black"],
+div[class*="fixed inset-0"][class*="z-"] {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(20px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
+}
+
+.theme-ubuntu.dark div[class*="fixed inset-0"],
+.dark .theme-ubuntu div[class*="fixed inset-0"],
+.theme-ubuntu.dark .fixed.inset-0,
+.dark .theme-ubuntu .fixed.inset-0 {
+  background-color: rgba(26, 10, 24, 0.72) !important;
+  backdrop-filter: blur(20px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
+}
+
+.theme-dream.dark div[class*="fixed inset-0"],
+.dark .theme-dream div[class*="fixed inset-0"],
+.theme-dream.dark .fixed.inset-0,
+.dark .theme-dream .fixed.inset-0 {
+  background-color: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(20px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
 }
 
 /* Scrollbar styles */

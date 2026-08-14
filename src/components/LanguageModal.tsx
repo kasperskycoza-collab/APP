@@ -39,7 +39,7 @@ export default function LanguageModal({ isOpen, onClose }: LanguageModalProps) {
   const isUbuntu = themePalette === 'ubuntu';
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 w-screen h-screen bg-slate-950/65 dark:bg-black/75 z-[100] flex items-center justify-center p-4 backdrop-blur-xl animate-in fade-in duration-200">
       <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-700 animate-in zoom-in-95 duration-200">
         
         {/* Header */}

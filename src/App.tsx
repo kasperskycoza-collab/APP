@@ -8,8 +8,9 @@ import BottomNav from './components/BottomNav';
 import PinScreen from './components/PinScreen';
 import { useStore } from './store';
 import { useTranslation } from './useTranslation';
-import { LogIn, Target, Mail, Wallet, User, UserPlus, UserCheck, AlertCircle, PieChart, Book, Home } from 'lucide-react';
-import { auth, provider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, hasFirebaseConfig } from './firebase';
+import { LogIn, Target, Mail, Wallet, User, UserPlus, UserCheck, AlertCircle, PieChart, Book, Home, Cloud, CheckCircle2, Lock, ShieldCheck } from 'lucide-react';
+import { auth, provider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, hasFirebaseConfig } from './firebase';
+import { subscribeToUserData, saveUserProfileToFirestore, uploadLocalDataToFirestore } from './firestoreSync';
 
 export default function App() {
   const { 
@@ -24,7 +25,14 @@ export default function App() {
     setThemeMode, 
     registerOfflineUser, 
     accessOfflineUser, 
-    registeredUsers 
+    registeredUsers,
+    setCloudData,
+    isCloudSynced,
+    transactions,
+    goals,
+    accounts,
+    currency,
+    language: appLanguage
   } = useStore();
 
   const { t, language } = useTranslation();
@@ -73,8 +81,13 @@ export default function App() {
   }, [isEffectiveDark, activePalette]);
   
   // Firebase Auth states
+  const [authMode, setAuthMode] = useState<'signin' | 'register'>('signin');
+  const [useOfflineMode, setUseOfflineMode] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [regFirstName, setRegFirstName] = useState('');
+  const [regSurname, setRegSurname] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -103,6 +116,16 @@ export default function App() {
     }
   }, [login]);
 
+  // Firestore Real-Time Cloud Listener
+  useEffect(() => {
+    if (isLoggedIn && user?.id && !user.id.startsWith('off_')) {
+      const unsubscribe = subscribeToUserData(user.id, (cloudData) => {
+        setCloudData(cloudData);
+      });
+      return () => unsubscribe();
+    }
+  }, [isLoggedIn, user?.id, setCloudData]);
+
   const handleGoogleLogin = async () => {
     if (!auth || !provider) return;
     setError('');
@@ -110,29 +133,126 @@ export default function App() {
     try {
       await signInWithPopup(auth, provider);
     } catch (err: any) {
-      setError(err.message || 'Failed to sign in with Google');
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+        // User closed or cancelled the popup before completing sign-in
+        setError('');
+      } else if (err.code === 'auth/popup-blocked') {
+        setError(language === 'sw' 
+          ? 'Dirisha ibukizi la kuingia limezuiwa na kivinjari chako. Tafadhali ruhusu madirisha ibukizi (popups).'
+          : 'Sign-in popup was blocked by your browser. Please allow popups for this site.');
+      } else {
+        setError(err.message || 'Failed to sign in with Google');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEmailAction = async (isSignUp: boolean) => {
-    if (!hasFirebaseConfig) {
+  const handleEmailSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!auth) return;
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) {
+      setError(language === 'sw' ? 'Tafadhali weka barua pepe yako.' : 'Please enter your email address.');
       return;
     }
-    if (!auth || !email || !password) {
+    if (!password) {
+      setError(language === 'sw' ? 'Tafadhali weka nenosiri lako.' : 'Please enter your password.');
       return;
     }
+
     setError('');
     setLoading(true);
     try {
-      if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password);
-      } else {
-        await signInWithEmailAndPassword(auth, email, password);
-      }
+      await signInWithEmailAndPassword(auth, cleanEmail, password);
     } catch (err: any) {
-      setError(err.message || 'Authentication failed');
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+        setError(language === 'sw' ? 'Barua pepe au nenosiri si sahihi.' : 'Invalid email or password.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError(language === 'sw' ? 'Muundo wa barua pepe si sahihi.' : 'Invalid email address format.');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError(language === 'sw' ? 'Majaribio mengi yasiyo sahihi. Tafadhali subiri kidogo.' : 'Too many failed attempts. Please try again later.');
+      } else if (err.code === 'auth/network-request-failed') {
+        setError(language === 'sw' ? 'Tatizo la mtandao. Angalia muunganisho wako wa intaneti.' : 'Network error. Please check your internet connection.');
+      } else {
+        setError(err.message || (language === 'sw' ? 'Imeshindwa kuingia.' : 'Authentication failed.'));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEmailRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!auth) return;
+    const cleanEmail = email.trim().toLowerCase();
+    
+    if (!cleanEmail) {
+      setError(language === 'sw' ? 'Tafadhali weka barua pepe yako.' : 'Please enter your email address.');
+      return;
+    }
+    if (!password) {
+      setError(language === 'sw' ? 'Tafadhali weka nenosiri.' : 'Please enter a password.');
+      return;
+    }
+    if (password.length < 6) {
+      setError(language === 'sw' ? 'Nenosiri lazima liwe na angalau herufi 6.' : 'Password must be at least 6 characters long.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError(language === 'sw' ? 'Nenosiri la uthibitisho halilingani na nenosiri.' : 'Passwords do not match.');
+      return;
+    }
+
+    setError('');
+    setLoading(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
+      const fullName = [regFirstName.trim(), regSurname.trim()].filter(Boolean).join(' ') || cleanEmail.split('@')[0];
+      
+      // Update Firebase Auth user profile
+      try {
+        await updateProfile(userCredential.user, {
+          displayName: fullName
+        });
+      } catch (profileErr) {
+        console.warn('Could not set displayName on Firebase Auth user:', profileErr);
+      }
+
+      // Save initial profile to Cloud Firestore
+      await saveUserProfileToFirestore(userCredential.user.uid, {
+        email: cleanEmail,
+        name: fullName,
+        firstName: regFirstName.trim(),
+        surname: regSurname.trim(),
+        currency: currency || 'TZS',
+        language: appLanguage || 'en',
+        themePalette: themePalette || 'dream',
+        themeMode: themeMode || 'system'
+      });
+
+      // Update zustand state
+      login({
+        email: cleanEmail,
+        name: fullName,
+        firstName: regFirstName.trim(),
+        surname: regSurname.trim(),
+        id: userCredential.user.uid
+      });
+    } catch (err: any) {
+      if (err.code === 'auth/email-already-in-use') {
+        setError(language === 'sw' ? 'Barua pepe hii imekwisha sajiliwa. Tafadhali chagua "Ingia".' : 'This email is already registered. Please click "Sign In".');
+      } else if (err.code === 'auth/weak-password') {
+        setError(language === 'sw' ? 'Nenosiri ni dhaifu. Tumia angalau herufi 6.' : 'Password is too weak. Please use at least 6 characters.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError(language === 'sw' ? 'Muundo wa barua pepe si sahihi.' : 'Invalid email address format.');
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setError(language === 'sw' ? 'Usajili wa barua pepe haujawezeshwa kwenye seva.' : 'Email/password sign-up is not enabled.');
+      } else if (err.code === 'auth/network-request-failed') {
+        setError(language === 'sw' ? 'Tatizo la mtandao. Angalia muunganisho wako wa intaneti.' : 'Network error. Please check your internet connection.');
+      } else {
+        setError(err.message || (language === 'sw' ? 'Imeshindwa kusajili akaunti.' : 'Registration failed.'));
+      }
     } finally {
       setLoading(false);
     }
@@ -169,57 +289,208 @@ export default function App() {
         
         <div className="w-full max-w-md bg-white/10 p-5 sm:p-6 rounded-2xl sm:rounded-3xl backdrop-blur-md border border-white/20 shadow-2xl">
           
-          {hasFirebaseConfig ? (
-            <div>
-              {error && <div className="bg-red-500/20 text-red-100 p-3 rounded-xl mb-4 text-sm text-center border border-red-500/30">{error}</div>}
-              
-              <input 
-                type="email" 
-                placeholder={language === 'sw' ? 'Barua Pepe' : 'Email Address'} 
-                className="w-full bg-white/20 border border-white/30 rounded-xl p-4 text-white placeholder-white/60 focus:outline-none focus:border-white mb-4"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-              />
-              <input 
-                type="password" 
-                placeholder={language === 'sw' ? 'Nenosiri' : 'Password'} 
-                className="w-full bg-white/20 border border-white/30 rounded-xl p-4 text-white placeholder-white/60 mb-6 focus:outline-none focus:border-white"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-              />
+          {hasFirebaseConfig && !useOfflineMode ? (
+            <div className="space-y-4">
+              {/* Mode Switcher: Sign In vs Register */}
+              <div className="grid grid-cols-2 p-1 bg-black/20 rounded-xl border border-white/10 text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => { setAuthMode('signin'); setError(''); }}
+                  className={`py-2.5 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    authMode === 'signin'
+                      ? 'bg-white text-emerald-800 shadow-md font-extrabold'
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  <LogIn size={15} />
+                  <span>{language === 'sw' ? 'Ingia' : 'Sign In'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setAuthMode('register'); setError(''); }}
+                  className={`py-2.5 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    authMode === 'register'
+                      ? 'bg-white text-emerald-800 shadow-md font-extrabold'
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  <UserPlus size={15} />
+                  <span>{language === 'sw' ? 'Fungua Akaunti' : 'Create Account'}</span>
+                </button>
+              </div>
 
-              <div className="space-y-3">
-                <button 
-                  onClick={() => handleEmailAction(false)}
-                  disabled={loading}
-                  className="w-full bg-white text-emerald-700 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 disabled:opacity-70 cursor-pointer"
-                >
-                  <LogIn size={20} /> {language === 'sw' ? 'Ingia na Barua Pepe' : 'SignIn with Email'}
-                </button>
-                <button 
-                  onClick={() => handleEmailAction(true)}
-                  disabled={loading}
-                  className="w-full bg-transparent border-2 border-white text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 disabled:opacity-70 cursor-pointer"
-                >
-                  <Mail size={20} /> {language === 'sw' ? 'Sajili Barua Pepe' : 'Register Email'}
-                </button>
-                <div className="flex items-center gap-3 my-4">
-                  <div className="h-px bg-white/30 flex-1"></div>
-                  <span className="text-sm opacity-70">{language === 'sw' ? 'au endelea na' : 'or continue with'}</span>
-                  <div className="h-px bg-white/30 flex-1"></div>
+              {/* Error Box */}
+              {error && (
+                <div className="bg-rose-500/25 text-rose-100 p-3 rounded-xl text-xs flex items-start gap-2.5 border border-rose-400/40 animate-in fade-in">
+                  <AlertCircle size={16} className="text-rose-300 flex-shrink-0 mt-0.5" />
+                  <span className="leading-snug font-medium">{error}</span>
                 </div>
-                <button 
-                  onClick={handleGoogleLogin}
-                  disabled={loading}
-                  className="w-full bg-white text-slate-800 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-sm disabled:opacity-70 cursor-pointer"
+              )}
+
+              {authMode === 'signin' ? (
+                /* Online Sign In Form */
+                <form onSubmit={handleEmailSignIn} className="space-y-3.5">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold tracking-wider uppercase text-emerald-100 flex items-center gap-1">
+                      <Mail size={12} /> {language === 'sw' ? 'Barua Pepe' : 'Email Address'} <span className="text-rose-300">*</span>
+                    </label>
+                    <input 
+                      type="email" 
+                      required
+                      placeholder="e.g. user@example.com" 
+                      className="w-full bg-white/20 border border-white/30 rounded-xl p-3.5 text-sm text-white placeholder-white/50 focus:outline-none focus:border-white focus:bg-white/30 transition-all"
+                      value={email}
+                      onChange={e => { setEmail(e.target.value); setError(''); }}
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold tracking-wider uppercase text-emerald-100 flex items-center gap-1">
+                      <Lock size={12} /> {language === 'sw' ? 'Nenosiri' : 'Password'} <span className="text-rose-300">*</span>
+                    </label>
+                    <input 
+                      type="password" 
+                      required
+                      placeholder="••••••••" 
+                      className="w-full bg-white/20 border border-white/30 rounded-xl p-3.5 text-sm text-white placeholder-white/50 focus:outline-none focus:border-white focus:bg-white/30 transition-all"
+                      value={password}
+                      onChange={e => { setPassword(e.target.value); setError(''); }}
+                    />
+                  </div>
+
+                  <button 
+                    type="submit"
+                    disabled={loading}
+                    className="w-full mt-2 bg-white text-emerald-800 font-extrabold py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg hover:bg-emerald-50 active:scale-[0.99] transition-all disabled:opacity-60 cursor-pointer"
+                  >
+                    {loading ? (
+                      <span className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-emerald-800 border-t-transparent"></span>
+                    ) : (
+                      <>
+                        <LogIn size={18} />
+                        <span>{language === 'sw' ? 'Ingia na Barua Pepe' : 'Sign In with Email'}</span>
+                      </>
+                    )}
+                  </button>
+
+                  <div className="flex items-center gap-3 my-3">
+                    <div className="h-px bg-white/20 flex-1"></div>
+                    <span className="text-xs opacity-75 font-medium">{language === 'sw' ? 'au endelea na' : 'or continue with'}</span>
+                    <div className="h-px bg-white/20 flex-1"></div>
+                  </div>
+
+                  <button 
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    disabled={loading}
+                    className="w-full bg-white text-slate-800 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-md hover:bg-slate-50 transition-all disabled:opacity-60 cursor-pointer"
+                  >
+                    <svg className="w-5 h-5 col-auto shrink-0" viewBox="0 0 24 24">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                    Google
+                  </button>
+                </form>
+              ) : (
+                /* Online Register Form */
+                <form onSubmit={handleEmailRegister} className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold tracking-wider uppercase text-emerald-100 flex items-center gap-1">
+                        <User size={12} /> {language === 'sw' ? 'Jina la Kwanza' : 'First Name'}
+                      </label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. Erick" 
+                        className="w-full bg-white/20 border border-white/30 rounded-xl p-3 text-sm text-white placeholder-white/50 focus:outline-none focus:border-white focus:bg-white/30 transition-all"
+                        value={regFirstName}
+                        onChange={e => setRegFirstName(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold tracking-wider uppercase text-emerald-100 flex items-center gap-1">
+                        <User size={12} /> {language === 'sw' ? 'Jina la Ukoo' : 'Surname'}
+                      </label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. Paul" 
+                        className="w-full bg-white/20 border border-white/30 rounded-xl p-3 text-sm text-white placeholder-white/50 focus:outline-none focus:border-white focus:bg-white/30 transition-all"
+                        value={regSurname}
+                        onChange={e => setRegSurname(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold tracking-wider uppercase text-emerald-100 flex items-center gap-1">
+                      <Mail size={12} /> {language === 'sw' ? 'Barua Pepe' : 'Email Address'} <span className="text-rose-300">*</span>
+                    </label>
+                    <input 
+                      type="email" 
+                      required
+                      placeholder="e.g. user@example.com" 
+                      className="w-full bg-white/20 border border-white/30 rounded-xl p-3 text-sm text-white placeholder-white/50 focus:outline-none focus:border-white focus:bg-white/30 transition-all"
+                      value={email}
+                      onChange={e => { setEmail(e.target.value); setError(''); }}
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold tracking-wider uppercase text-emerald-100 flex items-center gap-1">
+                      <Lock size={12} /> {language === 'sw' ? 'Nenosiri (herufi 6+)' : 'Password (6+ chars)'} <span className="text-rose-300">*</span>
+                    </label>
+                    <input 
+                      type="password" 
+                      required
+                      placeholder="••••••••" 
+                      className="w-full bg-white/20 border border-white/30 rounded-xl p-3 text-sm text-white placeholder-white/50 focus:outline-none focus:border-white focus:bg-white/30 transition-all"
+                      value={password}
+                      onChange={e => { setPassword(e.target.value); setError(''); }}
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold tracking-wider uppercase text-emerald-100 flex items-center gap-1">
+                      <ShieldCheck size={12} /> {language === 'sw' ? 'Thibitisha Nenosiri' : 'Confirm Password'} <span className="text-rose-300">*</span>
+                    </label>
+                    <input 
+                      type="password" 
+                      required
+                      placeholder="••••••••" 
+                      className="w-full bg-white/20 border border-white/30 rounded-xl p-3 text-sm text-white placeholder-white/50 focus:outline-none focus:border-white focus:bg-white/30 transition-all"
+                      value={confirmPassword}
+                      onChange={e => { setConfirmPassword(e.target.value); setError(''); }}
+                    />
+                  </div>
+
+                  <button 
+                    type="submit"
+                    disabled={loading}
+                    className="w-full mt-2 bg-white text-emerald-800 font-extrabold py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg hover:bg-emerald-50 active:scale-[0.99] transition-all disabled:opacity-60 cursor-pointer"
+                  >
+                    {loading ? (
+                      <span className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-emerald-800 border-t-transparent"></span>
+                    ) : (
+                      <>
+                        <UserPlus size={18} />
+                        <span>{language === 'sw' ? 'Kamilisha Usajili wa Mtandaoni' : 'Register & Sync to Cloud'}</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
+
+              {/* Toggle to Offline Mode */}
+              <div className="pt-2 text-center border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setUseOfflineMode(true)}
+                  className="text-xs text-emerald-200 hover:text-white underline underline-offset-4 opacity-80 hover:opacity-100 transition-all cursor-pointer"
                 >
-                  <svg className="w-5 h-5 col-auto shrink-0" viewBox="0 0 24 24">
-                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                  </svg>
-                  Google
+                  {language === 'sw' ? 'Au tumia Hali ya Ndani (Bila Intaneti)' : 'Or use Offline Local Mode'}
                 </button>
               </div>
             </div>
@@ -375,11 +646,22 @@ export default function App() {
                 </form>
               )}
 
+              {hasFirebaseConfig && (
+                <div className="pt-2 text-center border-t border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setUseOfflineMode(false)}
+                    className="text-xs text-emerald-200 hover:text-white underline underline-offset-4 opacity-80 hover:opacity-100 transition-all cursor-pointer"
+                  >
+                    {language === 'sw' ? 'Rudi kwenye Muunganisho wa Mtandaoni (Cloud)' : 'Back to Online Cloud Sync'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
           
           <div className="mt-6 text-center text-[11px] opacity-60 font-medium border-t border-white/10 pt-3">
-            {hasFirebaseConfig 
+            {hasFirebaseConfig && !useOfflineMode
               ? (language === 'sw' ? 'Usawazishaji wa Mtandaoni Umewashwa' : 'Cloud Sync Enabled') 
               : (language === 'sw' ? 'Hali ya Nje ya Mtandao (Uhifadhi Salama wa Kifaa)' : 'Offline Mode (Local Storage Persistence)')}
           </div>

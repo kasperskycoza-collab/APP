@@ -1,0 +1,125 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net: Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Health check test connection document
+    match /test/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // User Profile Rules
+    function isValidUserProfile(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.email is string && data.email.size() <= 128 &&
+             (!('name' in data) || (data.name is string && data.name.size() <= 128)) &&
+             (!('firstName' in data) || (data.firstName is string && data.firstName.size() <= 128)) &&
+             (!('surname' in data) || (data.surname is string && data.surname.size() <= 128)) &&
+             (!('currency' in data) || (data.currency is string && data.currency.size() <= 10)) &&
+             (!('language' in data) || (data.language is string && data.language.size() <= 10)) &&
+             (!('themePalette' in data) || (data.themePalette is string && data.themePalette.size() <= 20)) &&
+             (!('themeMode' in data) || (data.themeMode is string && data.themeMode.size() <= 20)) &&
+             (!('pinLock' in data) || (data.pinLock is bool)) &&
+             (!('pin' in data) || (data.pin is string && data.pin.size() <= 8));
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUserProfile(incoming(), userId);
+      allow update: if isOwner(userId) && isValidId(userId) && isValidUserProfile(incoming(), userId) &&
+                       incoming().userId == existing().userId;
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      // Transactions subcollection
+      function isValidTransaction(data, userId) {
+        return data.id is string && data.id.size() <= 128 &&
+               data.userId is string && data.userId == userId &&
+               data.type is string && (data.type == 'income' || data.type == 'expense') &&
+               data.amount is number &&
+               data.category is string && data.category.size() <= 64 &&
+               data.date is string && data.date.size() <= 30 &&
+               (!('description' in data) || (data.description is string && data.description.size() <= 500)) &&
+               (!('method' in data) || (data.method is string && data.method.size() <= 64)) &&
+               (!('account' in data) || (data.account is string && data.account.size() <= 64)) &&
+               (!('recurring' in data) || (data.recurring is bool)) &&
+               (!('frequency' in data) || (data.frequency is string && data.frequency.size() <= 30)) &&
+               (!('goalId' in data) || (data.goalId is number)) &&
+               (!('transferGroupId' in data) || (data.transferGroupId is string && data.transferGroupId.size() <= 128));
+      }
+
+      match /transactions/{transactionId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(transactionId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidId(transactionId) && isValidTransaction(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(userId) && isValidId(transactionId) && isValidTransaction(incoming(), userId) &&
+                         incoming().userId == existing().userId;
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(transactionId);
+      }
+
+      // Goals subcollection
+      function isValidGoal(data, userId) {
+        return data.id is string && data.id.size() <= 128 &&
+               data.userId is string && data.userId == userId &&
+               data.name is string && data.name.size() <= 128 &&
+               data.target is number &&
+               data.current is number &&
+               data.deadline is string && data.deadline.size() <= 30 &&
+               (!('description' in data) || (data.description is string && data.description.size() <= 500));
+      }
+
+      match /goals/{goalId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(goalId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidId(goalId) && isValidGoal(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(userId) && isValidId(goalId) && isValidGoal(incoming(), userId) &&
+                         incoming().userId == existing().userId;
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(goalId);
+      }
+
+      // Accounts subcollection
+      function isValidAccount(data, userId) {
+        return data.id is string && data.id.size() <= 128 &&
+               data.userId is string && data.userId == userId &&
+               data.name is string && data.name.size() <= 128 &&
+               data.balance is number &&
+               (!('isDefault' in data) || (data.isDefault is bool));
+      }
+
+      match /accounts/{accountId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(accountId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidId(accountId) && isValidAccount(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(userId) && isValidId(accountId) && isValidAccount(incoming(), userId) &&
+                         incoming().userId == existing().userId;
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(accountId);
+      }
+    }
+  }
+}

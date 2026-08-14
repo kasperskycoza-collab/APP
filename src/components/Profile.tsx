@@ -15,7 +15,7 @@ import PinSetupModal from './PinSetupModal';
 import CurrencyModal from './CurrencyModal';
 import LanguageModal from './LanguageModal';
 import { auth, db, hasFirebaseConfig } from '../firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { uploadLocalDataToFirestore, saveUserProfileToFirestore } from '../firestoreSync';
 import { ThemePalette, ThemeMode } from '../types';
 import { CURRENCIES } from '../i18n';
 
@@ -34,7 +34,10 @@ export default function Profile() {
     setThemeMode, 
     importData,
     notifications,
-    language
+    language,
+    transactions,
+    goals,
+    accounts
   } = store;
 
   const { t } = useTranslation();
@@ -47,6 +50,7 @@ export default function Profile() {
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [showPinSetupModal, setShowPinSetupModal] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -102,48 +106,50 @@ export default function Profile() {
   };
 
   const handleCloudBackup = async () => {
-    if (!hasFirebaseConfig || !auth?.currentUser || !db) {
-      alert(language === 'sw' ? "Hifadhi ya mtandaoni haipatikani. Tafadhali ingia kwenye akaunti." : "Cloud backup is not available. Please login to an online account.");
+    const activeUserId = auth?.currentUser?.uid || (user?.id && !user.id.startsWith('off_') ? user.id : null);
+    if (!hasFirebaseConfig || !activeUserId || !db) {
+      alert(language === 'sw' ? "Hifadhi ya mtandaoni inahitaji akaunti ya Google au barua pepe ya mtandaoni." : "Cloud backup requires a Google or online email account.");
       return;
     }
+    setIsSyncing(true);
     try {
-      const state = localStorage.getItem('simzy-storage');
-      if (state) {
-        await setDoc(doc(db, 'backups', auth.currentUser.uid), {
-          data: state,
-          updatedAt: new Date().toISOString()
-        });
-        alert(language === 'sw' ? "Imehifadhiwa kikamilifu kwenye Google Cloud Sync!" : "Successfully backed up to Google Cloud Sync!");
-      }
+      await uploadLocalDataToFirestore(activeUserId, {
+        transactions,
+        goals,
+        accounts,
+        profile: {
+          email: user?.email || '',
+          name: user?.name,
+          firstName: user?.firstName,
+          surname: user?.surname,
+          currency,
+          language,
+          themePalette,
+          themeMode
+        }
+      });
+      alert(language === 'sw' ? "Data zote zimehifadhiwa kikamilifu kwenye Firebase Cloud!" : "All data synchronized successfully to Firebase Firestore!");
     } catch (err) {
-      alert(language === 'sw' ? "Imeshindwa kuhifadhi mtandaoni." : "Failed to backup to cloud.");
+      alert(language === 'sw' ? "Imeshindwa kuhifadhi mtandaoni." : "Failed to sync to cloud.");
+    } finally {
+      setIsSyncing(false);
     }
   };
 
   const handleCloudRestore = async () => {
-    if (!hasFirebaseConfig || !auth?.currentUser || !db) {
-      alert(language === 'sw' ? "Urejeshaji wa mtandaoni haupatikani." : "Cloud restore is not available.");
+    const activeUserId = auth?.currentUser?.uid || (user?.id && !user.id.startsWith('off_') ? user.id : null);
+    if (!hasFirebaseConfig || !activeUserId || !db) {
+      alert(language === 'sw' ? "Urejeshaji wa mtandaoni haupatikani. Tafadhali ingia kwenye akaunti ya Google au barua pepe ya mtandaoni." : "Cloud restore is not available. Please login to an online account.");
       return;
     }
+    setIsSyncing(true);
     try {
-      const docSnap = await getDoc(doc(db, 'backups', auth.currentUser.uid));
-      if (docSnap.exists()) {
-        const stateStr = docSnap.data().data;
-        const parsed = JSON.parse(stateStr);
-        if (parsed.state) {
-          const success = importData(JSON.stringify(parsed.state));
-          if (success) {
-            alert(language === 'sw' ? 'Data zimerejeshwa kutoka mtandaoni kikamilifu!' : 'Data restored from cloud successfully!');
-            window.location.reload();
-          } else {
-            alert(language === 'sw' ? 'Data za mtandaoni si sahihi.' : 'Invalid cloud backup data.');
-          }
-        }
-      } else {
-        alert(language === 'sw' ? 'Hakuna nakala iliyopatikana mtandaoni.' : 'No cloud backup found.');
-      }
+      // With real-time listeners, data auto-syncs. We can trigger a manual sync notification.
+      alert(language === 'sw' ? 'Data zako zinasawazishwa moja kwa moja kutoka Firebase Cloud!' : 'Your data is being live-synced directly from Firebase Cloud!');
     } catch (err) {
-      alert(language === 'sw' ? "Imeshindwa kurejesha kutoka mtandaoni." : "Failed to restore from cloud.");
+      alert(language === 'sw' ? "Imeshindwa kurejesha kutoka mtandaoni." : "Failed to sync from cloud.");
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -362,7 +368,7 @@ export default function Profile() {
 
       {/* Theme Modal */}
       {showThemeModal && (
-        <div className="fixed inset-0 bg-slate-900/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 w-screen h-screen bg-slate-950/65 dark:bg-black/75 z-[100] flex items-center justify-center p-4 backdrop-blur-xl animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-700">
             <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
               <div className="flex items-center gap-2.5">

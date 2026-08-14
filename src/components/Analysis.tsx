@@ -17,7 +17,7 @@ export default function Analysis() {
 
   const incomeBarColor = isUbuntu ? '#E95420' : '#10b981';
   const expenseBarColor = isUbuntu ? '#77216F' : '#ef4444';
-  const gridStroke = isDark ? (isUbuntu ? '#383838' : '#334155') : (isUbuntu ? '#D5D0C7' : '#e2e8f0');
+  const gridStroke = isDark ? (isUbuntu ? '#666666' : '#475569') : (isUbuntu ? '#D5D0C7' : '#e2e8f0');
   const axisTextColor = isDark ? '#EBEBEB' : (isUbuntu ? '#2D2D2D' : '#64748b');
 
   const [period, setPeriod] = useState('monthly');
@@ -255,32 +255,55 @@ export default function Analysis() {
 
     if (period === 'weekly') {
       const days = isSwahili 
-        ? ['Jum', 'Jmt', 'Jmn', 'Jtn', 'Alh', 'Iju', 'Jms']
+        ? ['Jmt', 'Jmn', 'Jtn', 'Alh', 'Iju', 'Jms', 'Jum']
         : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      const weekData = days.map(d => ({ date: d, income: 0, expense: 0 }));
+
+      const startOfWeek = new Date(refDate);
+      const day = startOfWeek.getDay();
+      const diff = (day === 0 ? -6 : 1) - day;
+      startOfWeek.setDate(startOfWeek.getDate() + diff);
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      const weekData = days.map((d, idx) => {
+        const dayDate = new Date(startOfWeek);
+        dayDate.setDate(startOfWeek.getDate() + idx);
+        const dayNum = dayDate.getDate();
+        return {
+          date: `${d} ${dayNum}`,
+          income: 0,
+          expense: 0
+        };
+      });
+
       filteredTransactions.forEach(t => {
         const txDate = parseTxDate(t.date);
         let dayIdx = txDate.getDay();
         dayIdx = dayIdx === 0 ? 6 : dayIdx - 1;
-        if (t.type === 'income') weekData[dayIdx].income += t.amount;
-        else weekData[dayIdx].expense += t.amount;
+        if (dayIdx >= 0 && dayIdx < weekData.length) {
+          if (t.type === 'income') weekData[dayIdx].income += t.amount;
+          else weekData[dayIdx].expense += t.amount;
+        }
       });
       return weekData;
     }
 
     if (period === 'monthly') {
+      const prefix = isSwahili ? 'Wk' : 'W';
       const weeksData = [
-        { date: isSwahili ? 'Wk 1' : 'W1', income: 0, expense: 0 },
-        { date: isSwahili ? 'Wk 2' : 'W2', income: 0, expense: 0 },
-        { date: isSwahili ? 'Wk 3' : 'W3', income: 0, expense: 0 },
-        { date: isSwahili ? 'Wk 4' : 'W4', income: 0, expense: 0 },
+        { date: `${prefix}1 (1-7)`, weekStart: 1, weekEnd: 7, income: 0, expense: 0 },
+        { date: `${prefix}2 (8-14)`, weekStart: 8, weekEnd: 14, income: 0, expense: 0 },
+        { date: `${prefix}3 (15-21)`, weekStart: 15, weekEnd: 21, income: 0, expense: 0 },
+        { date: `${prefix}4 (22-28)`, weekStart: 22, weekEnd: 28, income: 0, expense: 0 },
+        { date: `${prefix}5 (29+)`, weekStart: 29, weekEnd: 31, income: 0, expense: 0 },
       ];
       filteredTransactions.forEach(t => {
         const txDate = parseTxDate(t.date);
-        const dateNum = txDate.getDate();
-        const wIdx = Math.min(3, Math.floor((dateNum - 1) / 7));
-        if (t.type === 'income') weeksData[wIdx].income += t.amount;
-        else weeksData[wIdx].expense += t.amount;
+        const day = txDate.getDate();
+        const bucket = weeksData.find(w => day >= w.weekStart && day <= w.weekEnd);
+        if (bucket) {
+          if (t.type === 'income') bucket.income += t.amount;
+          else bucket.expense += t.amount;
+        }
       });
       return weeksData;
     }
@@ -300,7 +323,7 @@ export default function Analysis() {
     }
 
     return [];
-  }, [filteredTransactions, period, isSwahili]);
+  }, [filteredTransactions, period, isSwahili, refDate]);
 
   const maxYValue = useMemo(() => {
     return barChartData.reduce((max, d) => Math.max(max, d.income, d.expense), 0);

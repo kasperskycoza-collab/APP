@@ -19,7 +19,7 @@ export default function ConfirmDeleteModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 z-[70] flex items-center justify-center p-5 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 w-screen h-screen bg-slate-950/70 dark:bg-black/80 z-[120] flex items-center justify-center p-5 backdrop-blur-xl animate-in fade-in duration-200">
       <div className="bg-white dark:bg-slate-800 w-full max-w-sm rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden flex flex-col">
         <div className="bg-red-50 dark:bg-red-900/20 p-6 flex flex-col items-center justify-center border-b border-red-100 dark:border-red-900/30">
           <div className="w-16 h-16 bg-red-100 dark:bg-red-900/50 rounded-full flex items-center justify-center mb-4 shadow-inner">

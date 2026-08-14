@@ -500,7 +500,7 @@ export default function ExportPdfModal({ isOpen, onClose, defaultAccount = 'all'
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/75 backdrop-blur-md overflow-hidden">
+    <div className="fixed inset-0 w-screen h-screen z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/65 dark:bg-black/75 backdrop-blur-xl overflow-hidden animate-in fade-in duration-200">
       <div className="bg-white dark:bg-slate-800 rounded-2xl md:rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-700/80 overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header Banner */}

@@ -50,10 +50,19 @@ export interface NotificationSettings {
   pushEnabled: boolean;
 }
 
+export interface UserScopedData {
+  accounts: Account[];
+  transactions: Transaction[];
+  goals: Goal[];
+  currency?: string;
+  language?: AppLanguage;
+}
+
 export interface AppState {
   user: { id?: string; name: string; email: string; firstName?: string; surname?: string; photoURL?: string } | null;
   registeredUsers: RegisteredUser[];
   registeredEmails: string[];
+  offlineDataByEmail?: Record<string, UserScopedData>;
   accounts: Account[];
   transactions: Transaction[];
   goals: Goal[];

@@ -133,7 +133,9 @@ export default function Goals() {
                       <span className={`text-[11px] sm:text-xs px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider border whitespace-nowrap flex-shrink-0 ${
                         isCompleted 
                           ? 'bg-gradient-to-r from-amber-100 to-amber-200/60 dark:from-amber-950/60 dark:to-amber-900/40 text-amber-700 dark:text-amber-400 border-amber-200/50 dark:border-amber-500/20' 
-                          : 'bg-emerald-100/70 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-500/20'
+                          : isUbuntu
+                            ? 'bg-[#FFF2EB] dark:bg-[#383838] text-[#E95420] border-[#E95420]/25'
+                            : 'bg-emerald-100/70 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-500/20'
                       }`}>
                         {isCompleted ? (isSwahili ? 'Imekamilika 🎉' : 'Completed 🎉') : `${percentage.toFixed(0)}% ${isSwahili ? 'Imefikiwa' : 'Approached'}`}
                       </span>
@@ -142,7 +144,13 @@ export default function Goals() {
                       </span>
                     </div>
                   </div>
-                  <div className={`font-black ${percFontSizeClass} tracking-tight flex items-center gap-1 flex-shrink-0 ${isCompleted ? 'text-amber-600 dark:text-amber-400 animate-pulse' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                  <div className={`font-black ${percFontSizeClass} tracking-tight flex items-center gap-1 flex-shrink-0 ${
+                    isCompleted 
+                      ? 'text-amber-600 dark:text-amber-400 animate-pulse' 
+                      : isUbuntu
+                        ? 'text-[#E95420]'
+                        : 'text-emerald-600 dark:text-emerald-400'
+                  }`}>
                     {isCompleted && <Sparkles size={16} className="text-amber-500 flex-shrink-0" />}
                     {percStr}
                   </div>
@@ -172,7 +180,11 @@ export default function Goals() {
               <div className="flex gap-2 items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 min-w-0">
                 <button
                   onClick={(e) => { e.stopPropagation(); setFundingGoal(goal); }}
-                  className="bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/50 px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
+                  className={`${
+                    isUbuntu
+                      ? 'bg-[#FFF2EB] hover:bg-[#FFE6D9] dark:bg-[#383838] text-[#E95420] border border-[#E95420]/30'
+                      : 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/50'
+                  } px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer`}
                 >
                   <PlusCircle size={15} className="flex-shrink-0" /> <span className="whitespace-nowrap">{t('fundGoal')}</span>
                 </button>

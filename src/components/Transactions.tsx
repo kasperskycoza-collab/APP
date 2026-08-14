@@ -257,15 +257,15 @@ export default function Transactions() {
           </div>
           
           <div className="flex gap-2.5 sm:gap-4 overflow-hidden w-full lg:w-auto shrink-0">
-            <div className="flex-1 lg:w-44 xl:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/20 min-w-0 flex flex-col justify-center">
-              <div className="text-xs opacity-80 mb-1 font-medium truncate">{t('totalInflow')}</div>
-              <div className={`text-emerald-200 ${getBoxValueClass('+' + formatCurrency(totalInflow))}`} title={'+' + formatCurrency(totalInflow)}>
+            <div className="flex-1 lg:w-44 xl:w-48 bg-white/20 dark:bg-black/35 backdrop-blur-md rounded-2xl p-3 md:p-4 border-2 border-white/40 dark:border-white/30 min-w-0 flex flex-col justify-center shadow-lg">
+              <div className="text-xs text-white/90 dark:text-emerald-200 mb-1 font-extrabold uppercase tracking-wide truncate">{t('totalInflow')}</div>
+              <div className={`text-emerald-100 dark:text-emerald-300 font-black ${getBoxValueClass('+' + formatCurrency(totalInflow))}`} title={'+' + formatCurrency(totalInflow)}>
                 +{formatCurrency(totalInflow)}
               </div>
             </div>
-            <div className="flex-1 lg:w-44 xl:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/20 min-w-0 flex flex-col justify-center">
-              <div className="text-xs opacity-80 mb-1 font-medium truncate">{t('totalOutflow')}</div>
-              <div className={`text-red-200 ${getBoxValueClass('-' + formatCurrency(totalOutflow))}`} title={'-' + formatCurrency(totalOutflow)}>
+            <div className="flex-1 lg:w-44 xl:w-48 bg-white/20 dark:bg-black/35 backdrop-blur-md rounded-2xl p-3 md:p-4 border-2 border-white/40 dark:border-white/30 min-w-0 flex flex-col justify-center shadow-lg">
+              <div className="text-xs text-white/90 dark:text-red-200 mb-1 font-extrabold uppercase tracking-wide truncate">{t('totalOutflow')}</div>
+              <div className={`text-red-100 dark:text-red-300 font-black ${getBoxValueClass('-' + formatCurrency(totalOutflow))}`} title={'-' + formatCurrency(totalOutflow)}>
                 -{formatCurrency(totalOutflow)}
               </div>
             </div>

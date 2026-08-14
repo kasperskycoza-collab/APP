@@ -10,28 +10,15 @@ interface AccountsModalProps {
 }
 
 export default function AccountsModal({ isOpen, onClose }: AccountsModalProps) {
-  const { accounts, currency } = useStore();
+  const { accounts, currency, addAccount, deleteAccount } = useStore();
   const [isAdding, setIsAdding] = useState(false);
   const [newAccountName, setNewAccountName] = useState('');
   const [newAccountBalance, setNewAccountBalance] = useState('');
   const [deletingAccountId, setDeletingAccountId] = useState<string | null>(null);
 
-  // Currently useStore lacks an addAccount method, we will add it shortly.
-  // This is a placeholder for the logic.
   const handleAdd = () => {
-    // Logic to add account to store
     if (newAccountName.trim()) {
-      useStore.setState(state => ({
-        accounts: [
-          ...state.accounts,
-          {
-            id: 'acc_' + Date.now(),
-            name: newAccountName,
-            balance: parseFloat(newAccountBalance) || 0,
-            isDefault: false
-          }
-        ]
-      }));
+      addAccount(newAccountName.trim(), parseFloat(newAccountBalance) || 0);
       setNewAccountName('');
       setNewAccountBalance('');
       setIsAdding(false);
@@ -44,9 +31,7 @@ export default function AccountsModal({ isOpen, onClose }: AccountsModalProps) {
 
   const confirmDelete = () => {
     if (deletingAccountId) {
-      useStore.setState(state => ({
-        accounts: state.accounts.filter(a => a.id !== deletingAccountId || a.isDefault),
-      }));
+      deleteAccount(deletingAccountId);
       setDeletingAccountId(null);
     }
   };
@@ -54,8 +39,8 @@ export default function AccountsModal({ isOpen, onClose }: AccountsModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 z-40 flex items-center justify-center p-5 pb-[5.5rem] backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-800 w-full sm:max-w-md rounded-2xl flex flex-col max-h-[100%] shadow-2xl animate-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 w-screen h-screen bg-slate-900/65 dark:bg-black/75 z-[100] flex items-center justify-center p-4 sm:p-5 backdrop-blur-xl animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-slate-800 w-full sm:max-w-md rounded-2xl flex flex-col max-h-[90vh] shadow-2xl animate-in zoom-in-95 duration-300">
         <div className="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-800 dark:border-slate-800 flex-shrink-0">
           <h2 className="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <Wallet className="text-emerald-500" size={20} />

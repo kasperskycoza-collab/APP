@@ -1,0 +1,98 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile, configuration, and preferences",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "firstName": { "type": "string", "maxLength": 128 },
+        "surname": { "type": "string", "maxLength": 128 },
+        "currency": { "type": "string", "maxLength": 10 },
+        "language": { "type": "string", "enum": ["en", "sw"], "maxLength": 5 },
+        "themePalette": { "type": "string", "enum": ["dream", "ubuntu"], "maxLength": 20 },
+        "themeMode": { "type": "string", "enum": ["light", "dark", "system"], "maxLength": 20 },
+        "pinLock": { "type": "boolean" },
+        "pin": { "type": "string", "maxLength": 8 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "email"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Income, expense, or transfer transaction record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "type": { "type": "string", "enum": ["income", "expense"], "maxLength": 10 },
+        "amount": { "type": "number" },
+        "category": { "type": "string", "maxLength": 64 },
+        "date": { "type": "string", "maxLength": 30 },
+        "description": { "type": "string", "maxLength": 500 },
+        "method": { "type": "string", "maxLength": 64 },
+        "account": { "type": "string", "maxLength": 64 },
+        "recurring": { "type": "boolean" },
+        "frequency": { "type": "string", "maxLength": 30 },
+        "goalId": { "type": "number" },
+        "transferGroupId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "type", "amount", "category", "date"]
+    },
+    "Goal": {
+      "title": "Goal",
+      "description": "Financial savings or milestone goal",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "target": { "type": "number" },
+        "current": { "type": "number" },
+        "deadline": { "type": "string", "maxLength": 30 },
+        "description": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "name", "target", "current", "deadline"]
+    },
+    "Account": {
+      "title": "Account",
+      "description": "Financial wallet or bank account",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "balance": { "type": "number" },
+        "isDefault": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "name", "balance"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile and preference settings"
+    },
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "User income, expense, and transfer records"
+    },
+    "/users/{userId}/goals/{goalId}": {
+      "schema": "Goal",
+      "description": "User financial savings goals"
+    },
+    "/users/{userId}/accounts/{accountId}": {
+      "schema": "Account",
+      "description": "User accounts and balances"
+    }
+  }
+}

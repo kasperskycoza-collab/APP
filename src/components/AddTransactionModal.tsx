@@ -84,34 +84,51 @@ export default function AddTransactionModal({ isOpen, onClose, initialType = 'ex
     setFrequency('monthly');
   };
 
+  const isUbuntu = store.themePalette === 'ubuntu';
+
   return (
-    <div className="fixed inset-0 bg-slate-900/50 z-[60] flex items-center justify-center p-5 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-800 w-full sm:max-w-md rounded-2xl flex flex-col max-h-[85vh] shadow-2xl animate-in zoom-in-95 duration-300">
-        <div className="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
+    <div className="fixed inset-0 w-screen h-screen bg-slate-950/65 dark:bg-black/75 z-[100] flex items-center justify-center p-4 sm:p-5 backdrop-blur-xl animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-slate-800 w-full sm:max-w-md rounded-2xl flex flex-col max-h-[85vh] shadow-2xl border border-slate-200 dark:border-slate-700 animate-in zoom-in-95 duration-300">
+        <div className="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-700 flex-shrink-0">
           <h2 className="font-bold text-lg text-slate-800 dark:text-slate-100">{t('addTransaction')}</h2>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 transition-colors cursor-pointer">
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors cursor-pointer">
             <X size={20} />
           </button>
         </div>
 
         <div className="overflow-y-auto custom-scrollbar p-5 flex-1">
           <form id="add-transaction-form" onSubmit={handleSubmit} className="space-y-4">
-            {error && <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 rounded-lg text-sm">{error}</div>}
+            {error && <div className="p-3 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 rounded-xl text-sm font-semibold">{error}</div>}
 
-            <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+            {/* Income / Expense Segmented Control with High Contrast Rectangles */}
+            <div className="grid grid-cols-2 gap-2 bg-slate-100 dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
               <button
                 type="button"
                 onClick={() => { setType('income'); setCategory(''); }}
-                className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors cursor-pointer ${type === 'income' ? 'bg-white dark:bg-slate-800 text-emerald-600 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+                className={`py-2.5 px-3 text-sm font-extrabold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2 border ${
+                  type === 'income' 
+                    ? (isUbuntu 
+                        ? 'bg-white dark:bg-[#383838] text-[#E95420] dark:text-[#E95420] border-[#E95420]/50 shadow-md ring-1 ring-[#E95420]/30' 
+                        : 'bg-white dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 border-emerald-500/60 shadow-md ring-1 ring-emerald-500/30') 
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 border-transparent hover:bg-slate-200/50 dark:hover:bg-slate-800'
+                }`}
               >
-                {t('income')}
+                <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${isUbuntu ? 'bg-[#E95420]' : 'bg-emerald-500'}`} />
+                <span>{t('income')}</span>
               </button>
               <button
                 type="button"
                 onClick={() => { setType('expense'); setCategory(''); }}
-                className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors cursor-pointer ${type === 'expense' ? 'bg-white dark:bg-slate-800 text-red-600 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+                className={`py-2.5 px-3 text-sm font-extrabold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2 border ${
+                  type === 'expense' 
+                    ? (isUbuntu 
+                        ? 'bg-white dark:bg-[#383838] text-[#77216F] dark:text-pink-400 border-[#77216F]/50 dark:border-pink-500/50 shadow-md ring-1 ring-[#77216F]/30' 
+                        : 'bg-white dark:bg-red-950/70 text-red-600 dark:text-red-400 border-red-500/60 shadow-md ring-1 ring-red-500/30') 
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 border-transparent hover:bg-slate-200/50 dark:hover:bg-slate-800'
+                }`}
               >
-                {t('expense')}
+                <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${isUbuntu ? 'bg-[#77216F] dark:bg-pink-400' : 'bg-red-500'}`} />
+                <span>{t('expense')}</span>
               </button>
             </div>
 
@@ -126,7 +143,7 @@ export default function AddTransactionModal({ isOpen, onClose, initialType = 'ex
                   const result = evaluateMath(amount);
                   if (result !== null) setAmount(result.toString());
                 }}
-                className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:border-emerald-500 focus:outline-none transition-colors text-lg bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:border-emerald-500 focus:outline-none transition-colors text-lg bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-bold"
               />
             </div>
 
@@ -139,8 +156,10 @@ export default function AddTransactionModal({ isOpen, onClose, initialType = 'ex
                     onClick={() => setCategory(cat)}
                     className={`border-2 p-2 rounded-xl text-center cursor-pointer text-xs font-semibold capitalize transition-all ${
                       category === cat
-                        ? type === 'income' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'border-red-500 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:border-emerald-200 hover:bg-slate-50 dark:bg-slate-900'
+                        ? type === 'income' 
+                            ? (isUbuntu ? 'border-[#E95420] bg-[#FFF2EB] dark:bg-[#383838] text-[#E95420] dark:text-[#E95420]' : 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300') 
+                            : (isUbuntu ? 'border-[#77216F] bg-[#FDF0F7] dark:bg-[#383838] text-[#77216F] dark:text-pink-300' : 'border-red-500 bg-red-50 dark:bg-red-950/70 text-red-700 dark:text-red-300')
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:border-emerald-300 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50'
                     }`}
                   >
                     {getCategoryName(cat)}

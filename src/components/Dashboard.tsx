@@ -20,7 +20,7 @@ export default function Dashboard() {
   const isDark = darkMode || (typeof document !== 'undefined' && document.documentElement.classList.contains('dark'));
   const incomeBarColor = isUbuntu ? '#E95420' : '#10b981';
   const expenseBarColor = isUbuntu ? '#77216F' : '#ef4444';
-  const gridStroke = isDark ? (isUbuntu ? '#383838' : '#334155') : (isUbuntu ? '#D5D0C7' : '#e2e8f0');
+  const gridStroke = isDark ? (isUbuntu ? '#666666' : '#475569') : (isUbuntu ? '#D5D0C7' : '#e2e8f0');
   const axisTextColor = isDark ? '#EBEBEB' : (isUbuntu ? '#2D2D2D' : '#64748b');
   
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
@@ -236,15 +236,15 @@ export default function Dashboard() {
           </div>
           
           <div className="flex gap-2.5 sm:gap-4 overflow-hidden w-full lg:w-auto shrink-0">
-            <div className="flex-1 lg:w-44 xl:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/20 min-w-0 flex flex-col justify-center">
-              <div className="text-xs opacity-80 mb-1 font-medium truncate">{t('todayIncome')}</div>
-              <div className={`text-emerald-200 ${getBoxValueClass('+' + formatCurrency(todayIncome))}`} title={'+' + formatCurrency(todayIncome)}>
+            <div className="flex-1 lg:w-44 xl:w-48 bg-white/20 dark:bg-black/35 backdrop-blur-md rounded-2xl p-3 md:p-4 border-2 border-white/40 dark:border-white/30 min-w-0 flex flex-col justify-center shadow-lg">
+              <div className="text-xs text-white/90 dark:text-emerald-200 mb-1 font-extrabold uppercase tracking-wide truncate">{t('todayIncome')}</div>
+              <div className={`text-emerald-100 dark:text-emerald-300 font-black ${getBoxValueClass('+' + formatCurrency(todayIncome))}`} title={'+' + formatCurrency(todayIncome)}>
                 +{formatCurrency(todayIncome)}
               </div>
             </div>
-            <div className="flex-1 lg:w-44 xl:w-48 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-white/20 min-w-0 flex flex-col justify-center">
-              <div className="text-xs opacity-80 mb-1 font-medium truncate">{t('todayExpense')}</div>
-              <div className={`text-red-200 ${getBoxValueClass('-' + formatCurrency(todayExpense))}`} title={'-' + formatCurrency(todayExpense)}>
+            <div className="flex-1 lg:w-44 xl:w-48 bg-white/20 dark:bg-black/35 backdrop-blur-md rounded-2xl p-3 md:p-4 border-2 border-white/40 dark:border-white/30 min-w-0 flex flex-col justify-center shadow-lg">
+              <div className="text-xs text-white/90 dark:text-red-200 mb-1 font-extrabold uppercase tracking-wide truncate">{t('todayExpense')}</div>
+              <div className={`text-red-100 dark:text-red-300 font-black ${getBoxValueClass('-' + formatCurrency(todayExpense))}`} title={'-' + formatCurrency(todayExpense)}>
                 -{formatCurrency(todayExpense)}
               </div>
             </div>
@@ -537,42 +537,55 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Transactions Section */}
-      <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-base md:text-lg font-extrabold text-slate-800 dark:text-slate-100">
+      <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm min-w-0">
+        <div className="flex justify-between items-center gap-2 mb-4">
+          <h2 className="text-sm sm:text-base md:text-lg font-extrabold text-slate-800 dark:text-slate-100 truncate">
             {t('recentTransactions')}
           </h2>
-          <span className="text-xs text-slate-400 font-semibold">
+          <span className="text-[11px] sm:text-xs text-slate-400 font-semibold whitespace-nowrap flex-shrink-0">
             {language === 'sw' ? 'Miamala 5 ya Mwisho' : 'Latest 5 Entries'}
           </span>
         </div>
         
-        <div className="space-y-2.5">
+        <div className="space-y-2.5 min-w-0">
           {transactions.slice(0, 5).map(tItem => {
+            const isIncome = tItem.type === 'income';
             const netBal = transactionNetBalances[tItem.id] ?? 0;
             return (
               <div 
                 key={tItem.id} 
                 onClick={() => setSelectedTransaction(tItem)}
-                className="transaction-card-interactive bg-slate-50/70 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/60 shadow-sm flex items-center gap-4 cursor-pointer"
+                className="transaction-card-interactive bg-slate-50/70 dark:bg-slate-900/50 p-3 sm:p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/60 shadow-sm flex items-center justify-between gap-2.5 sm:gap-4 cursor-pointer hover:border-slate-300 dark:hover:border-slate-600 transition-colors min-w-0"
               >
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${tItem.type === 'income' ? 'bg-emerald-100/80 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400' : 'bg-red-100/80 dark:bg-red-900/40 text-red-600 dark:text-red-400'}`}>
-                  {tItem.type === 'income' ? <ArrowDown size={20} /> : <ArrowUp size={20} />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">{tItem.description}</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-0.5">
-                    <span className="capitalize font-medium">{getCategoryName(tItem.category)}</span>
-                    <span>•</span>
-                    <span>{new Date(tItem.date).toLocaleDateString(language === 'sw' ? 'sw' : 'en-US')}</span>
+                <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+                  <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    isIncome 
+                      ? (isUbuntu ? 'bg-[#FFF2EB] dark:bg-[#383838] text-[#E95420]' : 'bg-emerald-100/80 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400') 
+                      : (isUbuntu ? 'bg-[#FDF0F7] dark:bg-[#383838] text-[#77216F]' : 'bg-red-100/80 dark:bg-red-900/40 text-red-600 dark:text-red-400')
+                  }`}>
+                    {isIncome ? <ArrowDown size={18} className="sm:w-5 sm:h-5" /> : <ArrowUp size={18} className="sm:w-5 sm:h-5" />}
+                  </div>
+                  <div className="min-w-0 flex-1 pr-1">
+                    <div className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 truncate" title={tItem.description}>
+                      {tItem.description}
+                    </div>
+                    <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 sm:gap-1.5 flex-wrap mt-0.5 min-w-0">
+                      <span className="capitalize font-medium truncate max-w-[100px] sm:max-w-[160px]">{getCategoryName(tItem.category)}</span>
+                      <span className="opacity-40">•</span>
+                      <span className="whitespace-nowrap">{new Date(tItem.date).toLocaleDateString(language === 'sw' ? 'sw' : 'en-US')}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-1 flex-shrink-0 ml-2">
-                  <div className={`font-black text-sm ${tItem.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {tItem.type === 'income' ? '+' : '-'}{formatCurrency(tItem.amount)}
+                <div className="flex flex-col items-end gap-0.5 sm:gap-1 flex-shrink-0 text-right ml-1">
+                  <div className={`font-black text-xs sm:text-sm md:text-base whitespace-nowrap ${
+                    isIncome 
+                      ? (isUbuntu ? 'text-[#E95420]' : 'text-emerald-600 dark:text-emerald-400') 
+                      : (isUbuntu ? 'text-[#77216F]' : 'text-red-600 dark:text-red-400')
+                  }`}>
+                    {isIncome ? '+' : '-'}{formatCurrency(tItem.amount)}
                   </div>
-                  <div className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold">
-                    {language === 'sw' ? 'Salio' : 'Running Bal'}: {formatCurrency(netBal)}
+                  <div className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">
+                    <span className="opacity-80">{language === 'sw' ? 'Salio' : 'Bal'}:</span> {formatCurrency(netBal)}
                   </div>
                 </div>
               </div>

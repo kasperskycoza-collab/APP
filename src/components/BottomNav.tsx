@@ -22,7 +22,11 @@ export default function BottomNav({ currentTab, setCurrentTab }: BottomNavProps)
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 flex justify-around p-2 z-50 shadow-lg">
+    <nav 
+      id="mobile-bottom-navigation"
+      aria-label="Mobile Navigation"
+      className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-800 grid grid-cols-5 items-center px-1 py-1.5 z-50 shadow-lg select-none"
+    >
       {tabs.map(tab => {
         const Icon = tab.icon;
         const isActive = currentTab === tab.id;
@@ -34,18 +38,27 @@ export default function BottomNav({ currentTab, setCurrentTab }: BottomNavProps)
         return (
           <button
             key={tab.id}
+            id={`nav-tab-${tab.id}`}
             onClick={() => setCurrentTab(tab.id)}
-            className={`flex flex-col items-center gap-1 p-2 w-16 transition-all ${
+            className={`flex flex-col items-center justify-center gap-1 py-1 px-0.5 w-full min-w-0 transition-all cursor-pointer ${
               isActive ? activeClass : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
             }`}
           >
-            <Icon size={22} className={isActive ? 'transform -translate-y-0.5 transition-transform' : ''} />
-            <span className={`text-[10px] truncate max-w-full font-semibold ${isActive ? 'font-bold' : ''}`}>
+            <Icon 
+              size={20} 
+              className={isActive ? 'transform -translate-y-0.5 transition-transform' : 'transition-transform'} 
+            />
+            <span 
+              className={`text-[9.5px] xs:text-[10.5px] sm:text-[11px] leading-tight whitespace-nowrap text-center tracking-tight ${
+                isActive ? 'font-bold' : 'font-medium'
+              }`}
+            >
               {tab.label}
             </span>
           </button>
         );
       })}
-    </div>
+    </nav>
   );
 }
+
